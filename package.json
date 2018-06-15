@@ -13,7 +13,7 @@
     "url": "github.com/SamVerschueren"
   },
   "engines": {
-    "vscode": "^0.10.6"
+    "vscode": "^1.23.0"
   },
   "categories": [
     "Snippets"
