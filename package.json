@@ -1,5 +1,5 @@
 {
-  "name": "ava",
+  "name": "vscode-ava",
   "displayName": "AVA",
   "icon": "media/icon.png",
   "version": "0.4.0",
@@ -19,7 +19,7 @@
     "Snippets"
   ],
   "activationEvents": [
-      "*"
+    "*"
   ],
   "main": "./out/ava-extension",
   "contributes": {
@@ -35,12 +35,12 @@
     ],
     "views": {
       "explorer": [
-          {
-              "id": "ava.test-tree",
-              "name": "Ava Test Tree"
-          }
+        {
+          "id": "ava.test-tree",
+          "name": "Ava Test Tree"
+        }
       ]
-  }
+    }
   },
   "scripts": {
     "vscode:prepublish": "npm run compile",
@@ -53,5 +53,11 @@
     "@types/node": "^10.3.3",
     "typescript": "^2.9.2",
     "vscode": "^1.1.6"
+  },
+  "dependencies": {
+    "ava": "^0.25.0",
+    "ava-spec": "^1.1.1",
+    "globby": "^8.0.1",
+    "mock-require": "^3.0.2"
   }
 }
