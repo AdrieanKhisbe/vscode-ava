@@ -18,11 +18,29 @@ export class AvaNodeProvider implements vscode.TreeDataProvider<AvaTestItem> {
 
 	getTreeItem(element: AvaTestItem): vscode.TreeItem {
 		element.command = {
-			command: 'ava.file-tree.openSelection',
+			command: 'ava.test-tree.openSelection',
 			title: '',
-			arguments: [element.label]
+			arguments: [element.item]
 		};
 		return element;
+	}
+
+	openSelection(item: AvaTest | AvaTestFile) {
+		const location = new vscode.Location(vscode.Uri.file(item.path),
+			new vscode.Position(item instanceof AvaTest ? item.line - 1 : 0, 0)
+		)
+		return vscode.workspace.openTextDocument(location.uri).then(doc => {
+			return vscode.window.showTextDocument(doc).then(editor => {
+				let reviewType: vscode.TextEditorRevealType =
+					(location.range.start.line === vscode.window.activeTextEditor.selection.active.line) 
+					? vscode.TextEditorRevealType.InCenterIfOutsideViewport 
+					: vscode.TextEditorRevealType.InCenter;
+
+				const testSelection = new vscode.Selection(location.range.start, location.range.end);
+				vscode.window.activeTextEditor.selection = testSelection;
+				vscode.window.activeTextEditor.revealRange(testSelection, reviewType);
+			})
+		})
 	}
 
 	getChildren(element?: AvaTestItem): Thenable<AvaTestItem[]> {
@@ -36,9 +54,9 @@ export class AvaNodeProvider implements vscode.TreeDataProvider<AvaTestItem> {
 		}
 		const cwd = vscode.workspace.workspaceFolders[0].uri.path;// §todo: handling multi workspace
 		return getAllTestFiles(cwd).then(testFiles => {
-			return Bromise.map(testFiles, (path: String, index: Number) => 
+			return Bromise.map(testFiles, (path: String, index: Number) =>
 				getTestFromFile(cwd, path).then(
-					tests => new AvaTestFile(`test file ${index}`, path, tests)
+					tests => new AvaTestFile(`test file ${index}`, `${cwd}/${path}`, tests) // §todo: path .join
 				)
 			)
 		}).then(testsFileDetails => {
@@ -48,6 +66,7 @@ export class AvaNodeProvider implements vscode.TreeDataProvider<AvaTestItem> {
 		});
 
 	}
+
 }
 
 class AvaTestItem extends vscode.TreeItem {
