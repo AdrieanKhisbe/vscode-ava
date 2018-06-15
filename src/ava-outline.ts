@@ -75,12 +75,12 @@ class AvaTestItem extends vscode.TreeItem {
 		public readonly collapsibleState: vscode.TreeItemCollapsibleState,
 		public command?: vscode.Command
 	) {
-		super(item.label, collapsibleState);
+		super(item.getDescription(), collapsibleState);
 	}
 
 	get tooltip(): string {
 		if (this.item instanceof AvaTest)
-			return `${this.label} - ${this.item.type} - line ${this.item.line}`;
+			return `${this.item.getDescription()} - ${this.item.type} - line ${this.item.line}`;
 		else
 			return `${this.label} - ${this.item.tests.length} tests`
 	}

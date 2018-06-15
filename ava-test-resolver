@@ -6,7 +6,7 @@ const testList = []
 
 const collectTestMock = type => function (testTitle, implementation) {
 	const st = stackTrace.get();
-	const title = typeof testTitle === 'string' ? testTitle : '<anonymous test>'
+	const title = typeof testTitle === 'string' ? testTitle : ''
 	testList.push([title, st[1].getLineNumber(), type])
 }
 const avaMock = {
@@ -18,7 +18,11 @@ avaMock.test.only = collectTestMock('standard');
 avaMock.test.skip = collectTestMock('skip');
 avaMock.test.todo = collectTestMock('todo');
 avaMock.test.failing = collectTestMock('failing');
-// §TODO beforeAndAfter
+avaMock.test.before = collectTestMock('before');
+avaMock.test.beforeEach = collectTestMock('beforeEach');
+avaMock.test.after = collectTestMock('after');
+avaMock.test.afterEach = collectTestMock('afterEach');
+
 mock('ava',avaMock);
 
 require(process.argv[2]);
