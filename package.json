@@ -33,11 +33,30 @@
         "path": "./snippets/assertions.json"
       }
     ],
+    "commands": [
+      {
+        "command": "ava.test-tree.refresh",
+        "title": "AVA: refresh test outline",
+        "icon": {
+          "light": "resources/light/refresh.svg",
+          "dark": "resources/dark/refresh.svg"
+        }
+      }
+    ],
     "views": {
       "explorer": [
         {
           "id": "ava.test-tree",
           "name": "Ava Test Tree"
+        }
+      ]
+    },
+    "menus": {
+      "view/title": [
+        {
+          "command": "ava.test-tree.refresh",
+          "when": "view == ava.test-tree",
+          "group": "navigation"
         }
       ]
     }
