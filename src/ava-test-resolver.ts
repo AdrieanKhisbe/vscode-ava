@@ -1,5 +1,5 @@
 import * as mock from 'mock-require';
-import * as path from 'path';
+import * as stackTrace from 'stack-trace';
 import * as globby from 'globby'
 import * as AvaFiles from 'ava/lib/ava-files';
 import { AvaTest } from './ava-test'
@@ -19,12 +19,12 @@ export const getTestFromFile = (cwd: String, file: String): AvaTest[] => {
 	const testList: AvaTest[] = []
 	mock('ava', {
 		test: function (command: String) {
-			testList.push(new AvaTest(command))
-		}, apply: (subject: String, args: Array<any>) => {
-			testList.push(new AvaTest(`apply: ${args[0]}`))
+			const st = stackTrace.get();
+			testList.push(new AvaTest(command, st[1].getLineNumber()))
 		}
 	});
 
 	require(`${cwd}/${file}`); // find a better way? (eval? haha) // move in another context?
+	mock.stop('ava')
 	return testList;
 }

@@ -59,6 +59,7 @@
     "ava-spec": "^1.1.1",
     "bluebird": "^3.5.1",
     "globby": "^8.0.1",
-    "mock-require": "^3.0.2"
+    "mock-require": "^3.0.2",
+    "stack-trace": "0.0.10"
   }
 }

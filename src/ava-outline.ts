@@ -58,7 +58,10 @@ class AvaTestItem extends vscode.TreeItem {
 	}
 
 	get tooltip(): string {
-		return `${this.label} - test`
+		if (this.item instanceof AvaTest)
+			return `${this.label} - line ${this.item.line}`;
+		else
+			return `${this.label} - ${this.item.tests.length} tests`
 	}
 	iconPath = {
 		light: path.join(__dirname, '..', '..', 'resources', 'light', 'reference-mark.svg'),

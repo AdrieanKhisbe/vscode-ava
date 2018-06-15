@@ -1,5 +1,6 @@
 export class AvaTest {
-	constructor(public label: String){}
+	constructor(public label: String, public line: number){
+	}
 
 }
 
