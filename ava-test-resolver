@@ -4,9 +4,10 @@ const stackTrace = require('stack-trace');
 
 const testList = []
 
-const collectTestMock = type => function (command) {
+const collectTestMock = type => function (testTitle, implementation) {
 	const st = stackTrace.get();
-	testList.push([command, st[1].getLineNumber(), type])
+	const title = typeof testTitle === 'string' ? testTitle : '<anonymous test>'
+	testList.push([title, st[1].getLineNumber(), type])
 }
 const avaMock = {
 	test: collectTestMock('standard')
