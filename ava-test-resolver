@@ -1,0 +1,15 @@
+#!/usr/bin/env node
+const mock = require('mock-require')
+const stackTrace = require('stack-trace');
+
+const testList = []
+mock('ava', {
+	test: function (command) {
+		const st = stackTrace.get();
+		testList.push([command, st[1].getLineNumber()])
+	}
+});
+
+require(process.argv[2]);
+mock.stop('ava')
+console.log(JSON.stringify(testList));

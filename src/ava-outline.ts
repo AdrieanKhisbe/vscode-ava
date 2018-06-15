@@ -36,10 +36,11 @@ export class AvaNodeProvider implements vscode.TreeDataProvider<AvaTestItem> {
 		}
 		const cwd = vscode.workspace.workspaceFolders[0].uri.path;// §todo: handling multi workspace
 		return getAllTestFiles(cwd).then(testFiles => {
-			return Bromise.map(testFiles, (path: String, index: Number) => {
-				const tests = getTestFromFile(cwd, path)
-				return new AvaTestFile(`test file ${index}`, path, tests)
-			})
+			return Bromise.map(testFiles, (path: String, index: Number) => 
+				getTestFromFile(cwd, path).then(
+					tests => new AvaTestFile(`test file ${index}`, path, tests)
+				)
+			)
 		}).then(testsFileDetails => {
 			return Bromise.resolve(testsFileDetails.map(
 				(tfd: AvaTestFile) => new AvaTestItem(tfd, vscode.TreeItemCollapsibleState.Collapsed)
@@ -47,6 +48,7 @@ export class AvaNodeProvider implements vscode.TreeDataProvider<AvaTestItem> {
 		});
 
 	}
+}
 
 class AvaTestItem extends vscode.TreeItem {
 	constructor(

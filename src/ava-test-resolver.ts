@@ -1,5 +1,5 @@
-import * as mock from 'mock-require';
-import * as stackTrace from 'stack-trace';
+import { exec } from 'child_process';
+import * as path from 'path';
 import * as globby from 'globby'
 import * as AvaFiles from 'ava/lib/ava-files';
 import { AvaTest } from './ava-test'
@@ -16,15 +16,22 @@ export const getAllTestFiles = (cwd: String, files: String[] | undefined) => {
 }
 
 export const getTestFromFile = (cwd: String, file: String): AvaTest[] => {
-	const testList: AvaTest[] = []
-	mock('ava', {
-		test: function (command: String) {
-			const st = stackTrace.get();
-			testList.push(new AvaTest(command, st[1].getLineNumber()))
-		}
-	});
-
-	require(`${cwd}/${file}`); // find a better way? (eval? haha) // move in another context?
-	mock.stop('ava')
-	return testList;
+	return Bromise.fromCallback(callback => {
+		const cmd = `${path.join(__dirname, '..', 'ava-test-resolver')} ${cwd}/${file}`;
+		exec(cmd, (error, stdout, stderr) => {
+			if (error) {
+				console.log(error.message)
+				return callback(error);
+			}
+			try {
+				const testData = JSON.parse(stdout);
+				callback(null, testData);
+			} catch (err) {
+				console.error(`Problem while parsing json: ${err.message}`);
+				return callback(err)
+			}
+		})
+	}).then(
+		tests => tests.map(([testLabel, index])=> new AvaTest(testLabel, index))
+	)
 }
