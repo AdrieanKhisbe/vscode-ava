@@ -80,7 +80,7 @@ class AvaTestItem extends vscode.TreeItem {
 
 	get tooltip(): string {
 		if (this.item instanceof AvaTest)
-			return `${this.label} - line ${this.item.line}`;
+			return `${this.label} - ${this.item.type} - line ${this.item.line}`;
 		else
 			return `${this.label} - ${this.item.tests.length} tests`
 	}

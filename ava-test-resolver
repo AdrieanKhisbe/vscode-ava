@@ -3,12 +3,22 @@ const mock = require('mock-require')
 const stackTrace = require('stack-trace');
 
 const testList = []
-mock('ava', {
-	test: function (command) {
-		const st = stackTrace.get();
-		testList.push([command, st[1].getLineNumber()])
-	}
-});
+
+const collectTestMock = type => function (command) {
+	const st = stackTrace.get();
+	testList.push([command, st[1].getLineNumber(), type])
+}
+const avaMock = {
+	test: collectTestMock('standard')
+};
+avaMock.test.cb = collectTestMock('standard');
+avaMock.test.serial = collectTestMock('standard');
+avaMock.test.only = collectTestMock('standard');
+avaMock.test.skip = collectTestMock('skip');
+avaMock.test.todo = collectTestMock('todo');
+avaMock.test.failing = collectTestMock('failing');
+// §TODO beforeAndAfter
+mock('ava',avaMock);
 
 require(process.argv[2]);
 mock.stop('ava')

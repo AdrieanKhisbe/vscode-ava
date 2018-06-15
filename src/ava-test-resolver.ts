@@ -31,6 +31,6 @@ export const getTestFromFile = (cwd: string, file: string): AvaTest[] => {
 			}
 		})
 	}).then(
-		tests => tests.map(([testLabel, index])=> new AvaTest(testLabel, `${cwd}/${file}`, index))
+		tests => tests.map(([testLabel, line, type])=> new AvaTest(testLabel, `${cwd}/${file}`, line, type))
 	)
 }
