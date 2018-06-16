@@ -1,6 +1,6 @@
 import * as vscode from 'vscode';
 import * as path from 'path';
-import { getAllTestFiles, getTestFromFile } from './ava-test-resolver'
+import { getAllTestFiles, getTestFromFile, getTestResultForFile } from './ava-test-resolver'
 import { AvaTest, AvaTestFile } from './ava-test';
 import * as Bromise from 'bluebird';
 
@@ -54,11 +54,28 @@ export class AvaNodeProvider implements vscode.TreeDataProvider<AvaTestItem> {
 		}
 		const cwd = vscode.workspace.workspaceFolders[0].uri.path;// §todo: handling multi workspace
 		return getAllTestFiles(cwd).then(testFiles => {
-			return Bromise.map(testFiles, (path: String, index: Number) =>
-				getTestFromFile(cwd, path).then(
-					tests => new AvaTestFile(`test file ${index}`, `${cwd}/${path}`, tests) // §todo: path .join
+			return Bromise.map(testFiles, (path: String, index: Number) =>{
+				return Bromise.all([
+					getTestFromFile(cwd, path),
+					getTestResultForFile(path)
+				])
+				.then(
+					([tests, testResults]) => {
+						if(testResults){
+						const testDict = tests.reduce((acc, val)=>{
+							if(val.label) acc[val.label] = val;
+							return acc;
+						}, {})
+						console.log(path, testDict, testResults)
+						testResults.asserts.forEach(assert => {
+							const testTitle = testResults.tests[assert.test -1].name
+							testDict[testTitle].status = assert.ok
+						})
+					}
+					return new AvaTestFile(`test file ${index}`, `${cwd}/${path}`, tests) // §todo: path .join
+					}
 				)
-			)
+			})
 		}).then(testsFileDetails => {
 			return Bromise.resolve(testsFileDetails.map(
 				(tfd: AvaTestFile) => new AvaTestItem(tfd, vscode.TreeItemCollapsibleState.Collapsed)
@@ -73,7 +90,8 @@ class AvaTestItem extends vscode.TreeItem {
 	constructor(
 		public readonly item: AvaTest | AvaTestFile,
 		public readonly collapsibleState: vscode.TreeItemCollapsibleState,
-		public command?: vscode.Command
+		public command?: vscode.Command,
+		public status?: String
 	) {
 		super(item.getDescription(), collapsibleState);
 	}

@@ -74,11 +74,18 @@
     "vscode": "^1.1.6"
   },
   "dependencies": {
+    "ansi-codes": "0.0.1-security",
     "ava": "^0.25.0",
     "ava-spec": "^1.1.1",
     "bluebird": "^3.5.1",
     "globby": "^8.0.1",
     "mock-require": "^3.0.2",
-    "stack-trace": "0.0.10"
+    "stack-trace": "0.0.10",
+    "tap-nyan": "^1.1.0",
+    "tap-out": "^3.0.0",
+    "tap-prettify": "0.0.2",
+    "tap-simple": "^0.3.1",
+    "tap-spec": "^5.0.0",
+    "tap-summary": "^4.0.0"
   }
 }
