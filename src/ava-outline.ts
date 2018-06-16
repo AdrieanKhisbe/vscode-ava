@@ -32,9 +32,9 @@ export class AvaNodeProvider implements vscode.TreeDataProvider<AvaTestItem> {
 		return vscode.workspace.openTextDocument(location.uri).then(doc => {
 			return vscode.window.showTextDocument(doc).then(editor => {
 				let reviewType: vscode.TextEditorRevealType =
-					(location.range.start.line === vscode.window.activeTextEditor.selection.active.line) 
-					? vscode.TextEditorRevealType.InCenterIfOutsideViewport 
-					: vscode.TextEditorRevealType.InCenter;
+					(location.range.start.line === vscode.window.activeTextEditor.selection.active.line)
+						? vscode.TextEditorRevealType.InCenterIfOutsideViewport
+						: vscode.TextEditorRevealType.InCenter;
 
 				const testSelection = new vscode.Selection(location.range.start, location.range.end);
 				vscode.window.activeTextEditor.selection = testSelection;
@@ -54,27 +54,27 @@ export class AvaNodeProvider implements vscode.TreeDataProvider<AvaTestItem> {
 		}
 		const cwd = vscode.workspace.workspaceFolders[0].uri.path;// §todo: handling multi workspace
 		return getAllTestFiles(cwd).then(testFiles => {
-			return Bromise.map(testFiles, (path: String, index: Number) =>{
+			return Bromise.map(testFiles, (path: String, index: Number) => {
 				return Bromise.all([
 					getTestFromFile(cwd, path),
 					getTestResultForFile(path)
 				])
-				.then(
-					([tests, testResults]) => {
-						if(testResults){
-						const testDict = tests.reduce((acc, val)=>{
-							if(val.label) acc[val.label] = val;
-							return acc;
-						}, {})
-						console.log(path, testDict, testResults)
-						testResults.asserts.forEach(assert => {
-							const testTitle = testResults.tests[assert.test -1].name
-							testDict[testTitle].status = assert.ok
-						})
-					}
-					return new AvaTestFile(`test file ${index}`, `${cwd}/${path}`, tests) // §todo: path .join
-					}
-				)
+					.then(
+						([tests, testResults]) => {
+							if (testResults) {
+								const testDict = tests.reduce((acc, val) => {
+									if (val.label) acc[val.label] = val;
+									return acc;
+								}, {})
+								console.log(path, testDict, testResults)
+								testResults.asserts.forEach(assert => {
+									const testTitle = testResults.tests[assert.test - 1].name
+									testDict[testTitle].status = assert.ok
+								})
+							}
+							return new AvaTestFile(`test file ${index}`, `${cwd}/${path}`, tests) // §todo: path .join
+						}
+					)
 			})
 		}).then(testsFileDetails => {
 			return Bromise.resolve(testsFileDetails.map(
@@ -90,8 +90,7 @@ class AvaTestItem extends vscode.TreeItem {
 	constructor(
 		public readonly item: AvaTest | AvaTestFile,
 		public readonly collapsibleState: vscode.TreeItemCollapsibleState,
-		public command?: vscode.Command,
-		public status?: String
+		public command?: vscode.Command
 	) {
 		super(item.getDescription(), collapsibleState);
 	}
@@ -102,9 +101,16 @@ class AvaTestItem extends vscode.TreeItem {
 		else
 			return `${this.label} - ${this.item.tests.length} tests`
 	}
-	iconPath = {
-		light: path.join(__dirname, '..', '..', 'resources', 'light', 'reference-mark.svg'),
-		dark: path.join(__dirname, '..', '..', 'resources', 'dark', 'reference-mark.svg')
+	get iconPath() {
+		const status = this.item instanceof AvaTestFile ?
+			this.item.tests.some(t => t.status === undefined) ? 'pending' : (
+				this.item.tests.some(t => !t.status) ? 'failed' : 'passed'
+			)
+			: (this.item.status === undefined ? 'pending' : (this.item.status ? 'passed' : 'failed'))
+		return {
+			light: path.join(__dirname, '..', 'resources', `${status}-autorun-light.svg`),
+			dark: path.join(__dirname, '..', 'resources', `${status}-autorun-dark.svg`)
+		}
 	};
 
 	contextValue = 'ava-test';
