@@ -102,14 +102,9 @@ class AvaTestItem extends vscode.TreeItem {
 			return `${this.label} - ${this.item.tests.length} tests`
 	}
 	get iconPath() {
-		const status = this.item instanceof AvaTestFile ?
-			this.item.tests.some(t => t.status === undefined) ? 'pending' : (
-				this.item.tests.some(t => !t.status) ? 'failed' : 'passed'
-			)
-			: (this.item.status === undefined ? 'pending' : (this.item.status ? 'passed' : 'failed'))
 		return {
-			light: path.join(__dirname, '..', 'resources', `${status}-autorun-light.svg`),
-			dark: path.join(__dirname, '..', 'resources', `${status}-autorun-dark.svg`)
+			light: path.join(__dirname, '..', 'resources', `${this.item.iconStatus}-autorun-light.svg`),
+			dark: path.join(__dirname, '..', 'resources', `${this.item.iconStatus}-autorun-dark.svg`)
 		}
 	};
 
