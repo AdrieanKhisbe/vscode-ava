@@ -8,7 +8,7 @@ import * as AvaFiles from 'ava/lib/ava-files';
 import { Readable } from 'stream'
 import { AvaTest } from './ava-test'
 
-export const getAllTestFiles = (cwd: string, files: string[] | undefined) => {
+export const getAllTestFiles = (cwd: string, files?: string[]) => {
 	return Bromise.resolve(files || globby(['**/*'], { cwd, ignore: ['node_modules/**'] })).then(
 		(candidateFiles: string[]) => {
 			const avafileMatcher = new AvaFiles({ cwd });

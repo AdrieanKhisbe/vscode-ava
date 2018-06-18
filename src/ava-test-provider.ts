@@ -8,16 +8,17 @@ function getTestTasks() {
 	return getAllTestFiles(cwd.uri.path).then(testFiles => {
 		return [
 			new vscode.Task({ type: 'ava', name: 'run all' },
-				cwd, 
+				cwd,
 				'run all',
-				'ava', 
-				new vscode.ShellExecution(`ava --tap | tee /tmp/vscode-ava-all-exec.tap`)),
-			...testFiles.map(tf =>  new vscode.Task({ type: 'ava', name: `run ${basename(tf)}`},
-			cwd, 
-			`run ${basename(tf)}`,
-			'ava', 
-		//new vscode.ShellExecution(`ava --tap ${tf} | tee /tmp/vscode-ava-${basename(tf)}-exec.tap | ${__dirname}/../node_modules/.bin/tap-simple`)))
-			new vscode.ShellExecution(`ava --tap ${tf} | ${__dirname}/../ava-test-runner ${basename(tf)}`)))
+				'ava',
+				new vscode.ShellExecution(`ava --tap | ava-test-runner ALL`, 
+				{ env: {PATH: `${__dirname}/..:${process.env.PATH}`}})),
+			...testFiles.map(tf => new vscode.Task({ type: 'ava', name: `run ${basename(tf)}` },
+				cwd,
+				`run ${basename(tf)}`,
+				'ava',
+				new vscode.ShellExecution(`ava --tap ${tf} | ava-test-runner ${basename(tf)}`, 
+				{ env: {PATH: `${__dirname}/..:${process.env.PATH}`}})))
 		]
 	})
 
