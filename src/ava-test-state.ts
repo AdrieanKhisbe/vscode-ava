@@ -11,11 +11,13 @@ export class AvaTestState {
 	testFilePaths: string[];
 	testIndex: Object;
 	globalTestIndex: Object;
-	constructor(public cwd: string) {
+	private readonly notifyChange
+	constructor(public cwd: string, notifyChange?) {
 		this.testIndex = [];
 		this.testFilePaths=[];
 		this.testFiles = [];
 		this.globalTestIndex = {};
+		this.notifyChange = notifyChange ? notifyChange : () => {}
 	}
 
 	load(): Promise<void> {
@@ -45,6 +47,7 @@ export class AvaTestState {
 			})
 				.then(testFiles => {
 					this.testFiles = testFiles;
+					this.notifyChange()
 				})
 		})
 	}
@@ -92,7 +95,7 @@ export class AvaTestState {
 						}
 					}
 				).catch(console.error)
-		return Promise.all([resolveSingleTestFiles, resolveCommonFiles]).then(() => {})
+		return Promise.all([resolveSingleTestFiles, resolveCommonFiles]).then(() => { this.notifyChange()})
 	}
 
 }

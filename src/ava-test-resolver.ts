@@ -48,7 +48,7 @@ export const getTestResultForFile = (file?: string) => {
 		if (!fs.existsSync(resultPath))
 			return callback(null, null);
 		return fs.readFile(resultPath, callback);
-	}).then(fileContent => {
+	}).then((fileContent?: string) => {
 		if (!fileContent) return null;
 		return Bromise.fromCallback(callback => {
 			const parser = tapOut(callback);
