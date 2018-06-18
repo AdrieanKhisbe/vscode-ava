@@ -42,13 +42,12 @@ export const getTestFromFile = (cwd: string, file: string, prefix: string): Brom
 	)
 }
 
-export const getTestResultForFile = (file: string) => {
-	const resultPath = `/tmp/vscode-ava/tests-${path.basename(file)}-exec.tap`
+export const getTestResultForFile = (file?: string) => {
+	const resultPath = `/tmp/vscode-ava/tests-${file ? path.basename(file) : 'ALL'}-exec.tap`
 	return Bromise.fromCallback(callback => {
 		if (!fs.existsSync(resultPath))
 			return callback(null, null);
 		return fs.readFile(resultPath, callback);
-
 	}).then(fileContent => {
 		if (!fileContent) return null;
 		return Bromise.fromCallback(callback => {

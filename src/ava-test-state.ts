@@ -7,12 +7,15 @@ import * as commonPathPrefix from 'common-path-prefix';
 
 export class AvaTestState {
 
-	testFiles: AvaTestFile[]
-	testFilePaths: string[]
-	testIndex: Object
-	globalTestIndex: Object
+	testFiles: AvaTestFile[];
+	testFilePaths: string[];
+	testIndex: Object;
+	globalTestIndex: Object;
 	constructor(public cwd: string) {
-		this.testIndex = []
+		this.testIndex = [];
+		this.testFilePaths=[];
+		this.testFiles = [];
+		this.globalTestIndex = {};
 	}
 
 	load(): Promise<void> {
@@ -47,20 +50,49 @@ export class AvaTestState {
 	}
 
 	updateStatus(): Promise<void> {
-		return Bromise.map(this.testFilePaths, (path: string, index: Number) => {
+		const resolveSingleTestFiles = Bromise.map(this.testFilePaths, (path: string, index: Number) => {
 			return getTestResultForFile(path)
 				.then(testResults => {
 						if (testResults) {
+							const timestampComment = testResults.comments[testResults.comments.length - 1];
+							const timestamp = new Date(timestampComment.raw);
+							console.log(timestampComment.raw, timestamp)
 							testResults.asserts.forEach(assert => {
+				
 								const testTitle = testResults.tests[assert.test - 1].name
 								const indexForPath = this.testIndex[path]
-								if(indexForPath && indexForPath[testTitle])
-									indexForPath[testTitle].status = assert.ok
+								if(indexForPath && indexForPath[testTitle]) {
+									const test: AvaTest = indexForPath[testTitle];
+									if(!test.timestamp || test.timestamp <= timestamp) {
+										test.status = assert.ok;
+										test.timestamp = timestamp;
+									}
+								}
 							})
 						}
 					}
-				)
+				).catch(console.error)
 		})
+		const resolveCommonFiles = getTestResultForFile()
+				.then(testResults => {
+						if (testResults) {
+							const timestampComment = testResults.comments[testResults.comments.length - 1];
+							const timestamp = new Date(timestampComment.raw);
+							console.log(timestampComment.raw, timestamp)
+							testResults.asserts.forEach(assert => {
+				
+								const testTitle = testResults.tests[assert.test - 1].name
+								const test: AvaTest = this.globalTestIndex[testTitle];
+								console.log(testTitle, test)
+								if(test && (!test.timestamp || test.timestamp <= timestamp)){
+										test.status = assert.ok;
+										test.timestamp = timestamp;
+									}
+							})
+						}
+					}
+				).catch(console.error)
+		return Promise.all([resolveSingleTestFiles, resolveCommonFiles]).then(() => {})
 	}
 
 }

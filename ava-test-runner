@@ -3,5 +3,7 @@ mkdir -p /tmp/vscode-ava
 dir="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 cdir="$(pwd)"
 cd $dir
-cat - | tee /tmp/vscode-ava/tests-$1-exec.tap | ./node_modules/.bin/tap-summary
+save_test_path="/tmp/vscode-ava/tests-$1-exec.tap"
+cat - | tee $save_test_path | ./node_modules/.bin/tap-summary
+date -R >> $save_test_path
 cd $cdir
