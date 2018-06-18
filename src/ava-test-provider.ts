@@ -11,14 +11,16 @@ function getTestTasks() {
 				cwd,
 				'run all',
 				'ava',
-				new vscode.ShellExecution(`ava --tap | ava-test-runner ALL`, 
-				{ env: {PATH: `${__dirname}/..:${process.env.PATH}`}})),
+				new vscode.ShellExecution(`ava --tap | ava-test-runner ALL`,
+					{ env: { PATH: `${__dirname}/..:${process.env.PATH}` } }),
+				[]),
 			...testFiles.map(tf => new vscode.Task({ type: 'ava', name: `run ${basename(tf)}` },
 				cwd,
 				`run ${basename(tf)}`,
 				'ava',
-				new vscode.ShellExecution(`ava --tap ${tf} | ava-test-runner ${basename(tf)}`, 
-				{ env: {PATH: `${__dirname}/..:${process.env.PATH}`}})))
+				new vscode.ShellExecution(`ava --tap ${tf} | ava-test-runner ${basename(tf)}`,
+					{ env: { PATH: `${__dirname}/..:${process.env.PATH}` } }),
+				[]))
 		]
 	})
 
