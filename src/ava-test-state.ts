@@ -1,8 +1,9 @@
 import * as vscode from 'vscode';
-import * as path from 'path';
-import { getAllTestFiles, getTestFromFile, getTestResultForFile } from './ava-test-resolver'
+import { join } from 'path';
+import { getAllTestFiles, getTestFromFile, getTestResultForFile, encodeFilePath} from './ava-test-resolver'
 import { AvaTest, AvaTestFile } from './ava-test';
 import * as Bromise from 'bluebird';
+import * as chokidar from 'chokidar';
 import * as commonPathPrefix from 'common-path-prefix';
 
 export class AvaTestState {
@@ -11,13 +12,14 @@ export class AvaTestState {
 	testFilePaths: string[];
 	testIndex: Object;
 	globalTestIndex: Object;
+	private testWatcher;
 	private readonly notifyChange
 	constructor(public cwd: string, notifyChange?) {
 		this.testIndex = [];
-		this.testFilePaths=[];
+		this.testFilePaths = [];
 		this.testFiles = [];
 		this.globalTestIndex = {};
-		this.notifyChange = notifyChange ? notifyChange : () => {}
+		this.notifyChange = notifyChange ? notifyChange : () => { }
 	}
 
 	load(): Promise<void> {
@@ -40,8 +42,8 @@ export class AvaTestState {
 								if (val.avaFullTitle) this.globalTestIndex[val.avaFullTitle] = val;
 								return acc;
 							}, {})
-							this.testIndex[path] = testDict
-							return new AvaTestFile(`test file ${index}`, `${this.cwd}/${path}`, tests) // §todo: path .join
+							this.testIndex[encodeFilePath(path)] = testDict
+							return new AvaTestFile(`test file ${index}`, join(this.cwd, path), tests)
 						}
 					).catch(console.error)
 			})
@@ -52,50 +54,88 @@ export class AvaTestState {
 		})
 	}
 
+	private handleTestStatusForFile(path?: string) {
+		return getTestResultForFile(path)
+			.then(testResults => {
+				if (testResults) {
+					console.log('TR', testResults)
+					const timestampComment = testResults.comments[testResults.comments.length - 1];
+				console.log('TSC', timestampComment)
+					const timestamp = new Date(timestampComment.raw);
+					console.log(timestampComment.raw, timestamp)
+					testResults.asserts.forEach(assert => {
+
+						const testTitle = testResults.tests[assert.test - 1].name
+						const indexForPath = this.testIndex[encodeFilePath(path)]
+						if (indexForPath && indexForPath[testTitle]) {
+							const test: AvaTest = indexForPath[testTitle];
+							if (!test.timestamp || test.timestamp <= timestamp) {
+								test.status = assert.ok;
+								test.timestamp = timestamp;
+							} else console.log('do not update', test.timestamp, timestamp)
+						} else console.log('not test index for '+ path, this.testIndex)
+					})
+				}
+			}
+			).catch(console.error)
+	}
+	private handleTestStatusGlobal() {
+		return getTestResultForFile()
+			.then(testResults => {
+				if (testResults) {
+					const timestampComment = testResults.comments[testResults.comments.length - 1];
+					const timestamp = new Date(timestampComment.raw);
+					console.log(timestampComment.raw, timestamp)
+					testResults.asserts.forEach(assert => {
+
+						const testTitle = testResults.tests[assert.test - 1].name
+						const test: AvaTest = this.globalTestIndex[testTitle];
+						console.log(testTitle, test)
+						if (test && (!test.timestamp || test.timestamp <= timestamp)) {
+							test.status = assert.ok;
+							test.timestamp = timestamp;
+						}
+					})
+				}
+			}
+			).catch(console.error)
+	}
+
 	updateStatus(): Promise<void> {
-		const resolveSingleTestFiles = Bromise.map(this.testFilePaths, (path: string, index: Number) => {
-			return getTestResultForFile(path)
-				.then(testResults => {
-						if (testResults) {
-							const timestampComment = testResults.comments[testResults.comments.length - 1];
-							const timestamp = new Date(timestampComment.raw);
-							console.log(timestampComment.raw, timestamp)
-							testResults.asserts.forEach(assert => {
-				
-								const testTitle = testResults.tests[assert.test - 1].name
-								const indexForPath = this.testIndex[path]
-								if(indexForPath && indexForPath[testTitle]) {
-									const test: AvaTest = indexForPath[testTitle];
-									if(!test.timestamp || test.timestamp <= timestamp) {
-										test.status = assert.ok;
-										test.timestamp = timestamp;
-									}
-								}
-							})
-						}
-					}
-				).catch(console.error)
-		})
-		const resolveCommonFiles = getTestResultForFile()
-				.then(testResults => {
-						if (testResults) {
-							const timestampComment = testResults.comments[testResults.comments.length - 1];
-							const timestamp = new Date(timestampComment.raw);
-							console.log(timestampComment.raw, timestamp)
-							testResults.asserts.forEach(assert => {
-				
-								const testTitle = testResults.tests[assert.test - 1].name
-								const test: AvaTest = this.globalTestIndex[testTitle];
-								console.log(testTitle, test)
-								if(test && (!test.timestamp || test.timestamp <= timestamp)){
-										test.status = assert.ok;
-										test.timestamp = timestamp;
-									}
-							})
-						}
-					}
-				).catch(console.error)
-		return Promise.all([resolveSingleTestFiles, resolveCommonFiles]).then(() => { this.notifyChange()})
+		return Promise.all([
+			Bromise.map(this.testFilePaths,
+				(path: string, index: Number) => this.handleTestStatusForFile(path)),
+			this.handleTestStatusGlobal()
+		]).then(() => { this.notifyChange() })
+	}
+
+	watchStatus() {
+		this.testWatcher = chokidar.watch('/tmp/vscode-ava/*', {
+			persistent: true,
+			ignoreInitial: true,
+			awaitWriteFinish: true
+		});
+		const changeCallback = path => {
+			console.log(path)
+			const match = /\/tmp\/vscode-ava\/tests-(.*)-exec.tap/.exec(path)
+			if (match) {
+				console.log(match)
+				if (match[1] === 'ALL') {
+					this.handleTestStatusGlobal()
+						.then(() => { this.notifyChange() });
+				} else {
+					this.handleTestStatusForFile(match[1])
+						.then(() => { this.notifyChange() });
+				}
+			}
+		}
+		this.testWatcher.on('change', changeCallback)
+		this.testWatcher.on('add', changeCallback)
+	}
+
+	stopWatch() {
+		if (this.testWatcher)
+			this.testWatcher.close()
 	}
 
 }

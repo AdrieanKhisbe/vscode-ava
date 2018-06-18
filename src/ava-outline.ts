@@ -17,6 +17,7 @@ export class AvaNodeProvider implements vscode.TreeDataProvider<AvaTestItem> {
 			() => this._onDidChangeTreeData.fire()
 		)
 		this.testState.load()
+		this.testState.watchStatus()
 	}
 
 	refresh(): void {

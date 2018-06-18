@@ -1,5 +1,5 @@
 import * as vscode from 'vscode';
-import { getAllTestFiles } from './ava-test-resolver'
+import { getAllTestFiles, encodeFilePath } from './ava-test-resolver'
 import { basename } from 'path';
 
 
@@ -18,7 +18,7 @@ function getTestTasks() {
 				cwd,
 				`run ${basename(tf)}`,
 				'ava',
-				new vscode.ShellExecution(`ava --tap ${tf} | ava-test-runner ${basename(tf)}`,
+				new vscode.ShellExecution(`ava --tap ${tf} | ava-test-runner ${encodeFilePath(tf)}`,
 					{ env: { PATH: `${__dirname}/..:${process.env.PATH}` } }),
 				[]))
 		]

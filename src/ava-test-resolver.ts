@@ -1,6 +1,6 @@
 import { exec } from 'child_process';
 import * as fs from 'fs';
-import * as path from 'path';
+import {join, sep} from 'path';
 import * as globby from 'globby'
 import * as tapOut from 'tap-out'
 import * as Bromise from 'bluebird';
@@ -9,6 +9,11 @@ require('ava/lib/chalk').set({enabled: false});
 import * as avaPrefixTitle from 'ava/lib/reporters/prefix-title'
 import { Readable } from 'stream'
 import { AvaTest } from './ava-test'
+
+export const encodeFilePath = path => {
+	const parts = path.split(sep);
+	return parts.join('__slash__')
+}
 
 export const getAllTestFiles = (cwd: string, files?: string[]) => {
 	return Bromise.resolve(files || globby(['**/*'], { cwd, ignore: ['node_modules/**'] })).then(
@@ -21,7 +26,7 @@ export const getAllTestFiles = (cwd: string, files?: string[]) => {
 
 export const getTestFromFile = (cwd: string, file: string, prefix: string): Bromise<AvaTest[]> => {
 	return Bromise.fromCallback(callback => {
-		const cmd = `${path.join(__dirname, '..', 'ava-test-resolver')} ${cwd}/${file}`;
+		const cmd = `${join(__dirname, '..', 'ava-test-resolver')} ${cwd}/${file}`;
 		exec(cmd, (error, stdout, stderr) => {
 			if (error) {
 				console.error(error.message)
@@ -43,7 +48,7 @@ export const getTestFromFile = (cwd: string, file: string, prefix: string): Brom
 }
 
 export const getTestResultForFile = (file?: string) => {
-	const resultPath = `/tmp/vscode-ava/tests-${file ? path.basename(file) : 'ALL'}-exec.tap`
+	const resultPath = `/tmp/vscode-ava/tests-${file ? encodeFilePath(file) : 'ALL'}-exec.tap`
 	return Bromise.fromCallback(callback => {
 		if (!fs.existsSync(resultPath))
 			return callback(null, null);
