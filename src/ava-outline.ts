@@ -55,7 +55,7 @@ export class AvaNodeProvider implements vscode.TreeDataProvider<AvaTestItem> {
 				)
 			)
 		}
-		return Bromise.resolve(this.testState.testIndex.map(
+		return Bromise.resolve(this.testState.testFiles.map(
 			(tfd: AvaTestFile) => new AvaTestItem(tfd, vscode.TreeItemCollapsibleState.Expanded)
 		));
 

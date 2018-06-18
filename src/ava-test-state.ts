@@ -7,48 +7,60 @@ import * as commonPathPrefix from 'common-path-prefix';
 
 export class AvaTestState {
 
-	testIndex: AvaTestFile[]
-	testFiles: string[]
+	testFiles: AvaTestFile[]
+	testFilePaths: string[]
+	testIndex: Object
+	globalTestIndex: Object
 	constructor(public cwd: string) {
 		this.testIndex = []
 	}
 
 	load(): Promise<void> {
+		return this.computeAvailableTests()
+			.then((() => this.updateStatus()))
+			.catch(console.error);
+	}
+	computeAvailableTests(): Promise<void> {
 		return getAllTestFiles(this.cwd).then(testFiles => {
-			this.testFiles = testFiles;
+			this.testFilePaths = testFiles;
 			const prefix = commonPathPrefix(testFiles)
+			this.testIndex = {}
+			this.globalTestIndex = {}
 			return Bromise.map(testFiles, (path: string, index: Number) => {
-				return Bromise.all([
-					getTestFromFile(this.cwd, path, prefix),
-					getTestResultForFile(path)
-				])
+				return getTestFromFile(this.cwd, path, prefix)
 					.then(
-						([tests, testResults]) => {
-							console.log('XXX')
-							if (testResults) {
-								const testDict = tests.reduce((acc, val) => {
-									if (val.label) acc[val.label] = val;
-									return acc;
-								}, {})
-								console.log(path, testDict, testResults)
-								testResults.asserts.forEach(assert => {
-									const testTitle = testResults.tests[assert.test - 1].name
-									console.log(testTitle, testDict)
-									testDict[testTitle].status = assert.ok
-								})
-							}
+						(tests: AvaTest[]) => {
+							const testDict = tests.reduce((acc, val: AvaTest) => {
+								if (val.label) acc[val.label] = val;
+								if (val.avaFullTitle) this.globalTestIndex[val.avaFullTitle] = val;
+								return acc;
+							}, {})
+							this.testIndex[path] = testDict
 							return new AvaTestFile(`test file ${index}`, `${this.cwd}/${path}`, tests) // §todo: path .join
 						}
 					).catch(console.error)
 			})
-			.then(testIndex => {
-				this.testIndex = testIndex;
-			})
+				.then(testFiles => {
+					this.testFiles = testFiles;
+				})
 		})
 	}
 
-	updateStatus():void {
-
+	updateStatus(): Promise<void> {
+		return Bromise.map(this.testFilePaths, (path: string, index: Number) => {
+			return getTestResultForFile(path)
+				.then(testResults => {
+						if (testResults) {
+							testResults.asserts.forEach(assert => {
+								const testTitle = testResults.tests[assert.test - 1].name
+								const indexForPath = this.testIndex[path]
+								if(indexForPath && indexForPath[testTitle])
+									indexForPath[testTitle].status = assert.ok
+							})
+						}
+					}
+				)
+		})
 	}
 
 }
