@@ -75,9 +75,10 @@
   },
   "dependencies": {
     "ansi-codes": "0.0.1-security",
-    "ava": "^0.25.0",
+    "ava": "^1.0.0-beta.6",
     "ava-spec": "^1.1.1",
     "bluebird": "^3.5.1",
+    "common-path-prefix": "^1.0.0",
     "globby": "^8.0.1",
     "mock-require": "^3.0.2",
     "stack-trace": "0.0.10",

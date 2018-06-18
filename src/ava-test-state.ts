@@ -3,6 +3,7 @@ import * as path from 'path';
 import { getAllTestFiles, getTestFromFile, getTestResultForFile } from './ava-test-resolver'
 import { AvaTest, AvaTestFile } from './ava-test';
 import * as Bromise from 'bluebird';
+import * as commonPathPrefix from 'common-path-prefix';
 
 export class AvaTestState {
 
@@ -15,9 +16,10 @@ export class AvaTestState {
 	load(): Promise<void> {
 		return getAllTestFiles(this.cwd).then(testFiles => {
 			this.testFiles = testFiles;
+			const prefix = commonPathPrefix(testFiles)
 			return Bromise.map(testFiles, (path: string, index: Number) => {
 				return Bromise.all([
-					getTestFromFile(this.cwd, path),
+					getTestFromFile(this.cwd, path, prefix),
 					getTestResultForFile(path)
 				])
 					.then(

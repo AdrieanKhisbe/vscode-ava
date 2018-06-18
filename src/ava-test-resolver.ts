@@ -5,6 +5,8 @@ import * as globby from 'globby'
 import * as tapOut from 'tap-out'
 import * as Bromise from 'bluebird';
 import * as AvaFiles from 'ava/lib/ava-files';
+require('ava/lib/chalk').set({enabled: false});
+import * as avaPrefixTitle from 'ava/lib/reporters/prefix-title'
 import { Readable } from 'stream'
 import { AvaTest } from './ava-test'
 
@@ -17,7 +19,7 @@ export const getAllTestFiles = (cwd: string, files?: string[]) => {
 	).catch(console.log)
 }
 
-export const getTestFromFile = (cwd: string, file: string): Bromise<AvaTest[]> => {
+export const getTestFromFile = (cwd: string, file: string, prefix: string): Bromise<AvaTest[]> => {
 	return Bromise.fromCallback(callback => {
 		const cmd = `${path.join(__dirname, '..', 'ava-test-resolver')} ${cwd}/${file}`;
 		exec(cmd, (error, stdout, stderr) => {
@@ -34,7 +36,9 @@ export const getTestFromFile = (cwd: string, file: string): Bromise<AvaTest[]> =
 			}
 		})
 	}).then(
-		tests => tests.map(([testLabel, line, type]) => new AvaTest(testLabel, `${cwd}/${file}`, line, type))
+		tests => tests.map(([testLabel, line, type]) => {
+			const avaFullTitle = testLabel && avaPrefixTitle(prefix, file, testLabel);
+			return new AvaTest(testLabel, avaFullTitle, cwd, file, line, type) })
 	)
 }
 
@@ -49,12 +53,12 @@ export const getTestResultForFile = (file: string) => {
 		if (!fileContent) return null;
 		return Bromise.fromCallback(callback => {
 			const parser = tapOut(callback);
-			try{
-			const stream = new Readable();
-			stream.pipe(parser);
-			stream.push(fileContent.toString());
-			stream.push(null)
-			} catch(err){
+			try {
+				const stream = new Readable();
+				stream.pipe(parser);
+				stream.push(fileContent.toString());
+				stream.push(null)
+			} catch (err) {
 				console.error(err)
 				return callback(err)
 			}

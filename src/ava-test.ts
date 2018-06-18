@@ -1,9 +1,13 @@
-import { basename } from 'path';
+import { basename , join} from 'path';
 
 export class AvaTest {
-	file: String
-	constructor(public label: string, public path: string, public line: number, public type: string, public status?: boolean) {
+	file: string
+	absolutePath: string
+	constructor(public label: string, public avaFullTitle: string, public cwd:string, public path: string, public line: number, public type: string, public status?: boolean) {
 		this.file = basename(path)
+		this.absolutePath = join(cwd, path)
+
+		console.log('>>', this.avaFullTitle)
 	}
 
 	get special() {
@@ -22,7 +26,6 @@ export class AvaTest {
 		return (this.label || '<anonymous test>') + ` status: ${this.status}`
 	}
 }
-
 export class AvaTestFile {
 	file: String
 	constructor(public label: string, public path: string, public tests: AvaTest[]) {
