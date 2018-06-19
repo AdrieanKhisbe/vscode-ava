@@ -43,3 +43,4 @@ export class AvaTestFile {
 		return tests.some(t => !t.status) ? 'failed' : 'passed';
 	}
 }
+

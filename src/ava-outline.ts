@@ -26,12 +26,9 @@ export class AvaNodeProvider implements vscode.TreeDataProvider<AvaTestItem> {
 	}
 
 	runTests(test: AvaTest | AvaTestFile): void {
-		console.log('Running test for ', test)
 		if (test instanceof AvaTestFile) {
-			console.log('XXXX', test.path)
-			runTests({file: test.path}); // §todo cwd handling
+			runTests({file: test.path}); // §todo cwd handling (prompting if several)
 		} else {
-			console.log('YYYYYYY')
 			if(test.special)
 			  vscode.window.showInformationMessage(`${test.getDescription()} is not runnable.`)
 			else

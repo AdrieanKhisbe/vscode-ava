@@ -10,21 +10,21 @@ export function runTests(args) {
 	const file = args && args.file;
 	const hashedfile = encodeFilePath(file)
 	const label = args && file && args.label;
-	
-	if (!outputChannel)
-	 	outputChannel = vscode.window.createOutputChannel('AVA');
 
-	const cmd = label ? `ava ${file} --match "${label}" --tap | ${__dirname}/../ava-test-runner "${hashedfile}" "${label}"`// | ${__dirname}/../ava-test-reporter
-	: `ava --tap ${file||''} | ${__dirname}/../ava-test-runner ${hashedfile || 'ALL'} | ${__dirname}/../ava-test-reporter`;
-	console.log(cmd, cwd)
+	if (!outputChannel)
+		outputChannel = vscode.window.createOutputChannel('AVA');
+
+	const cmd = label ? `ava ${file} --match "${label}" --tap | ${__dirname}/../ava-test-runner "${hashedfile}" "${label}" | ${__dirname}/../ava-test-reporter --no-recap`
+		: `ava --tap ${file || ''} | ${__dirname}/../ava-test-runner ${hashedfile || 'ALL'} | ${__dirname}/../ava-test-reporter`;
+
 	return Bromise.fromCallback(callback => {
-		const ava = spawn('sh', ['-c', cmd], {cwd})
+		const ava = spawn('sh', ['-c', cmd], { cwd })
 		ava.stdout.on('data', data => {
 			outputChannel.append(stripAnsi(data.toString()));
-		  });
+		});
 		ava.stderr.on('data', data => {
 			console.error(data.toString());
-		}); 
+		});
 		ava.on('close', callback);
 		outputChannel.show();
 	})
@@ -32,5 +32,4 @@ export function runTests(args) {
 
 // new vscode.ShellExecution(`ava --tap | ava-test-runner ALL`,
 // { env: { PATH: `${__dirname}/..:${process.env.PATH}` } }),
-			
-				
+

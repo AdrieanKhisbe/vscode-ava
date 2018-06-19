@@ -57,8 +57,7 @@ export class AvaTestState {
 	private handleTestStatusForFile(path?: string) {
 		return getTestResultForFile(path)
 			.then(testResults => {
-				if (testResults) {	
-					console.log(testResults.comments)
+				if (testResults) {
 					const timestampComment = testResults.comments[testResults.comments.length - 1];	
 					const timestamp = new Date(timestampComment.raw);
 					testResults.asserts.forEach(assert => {
@@ -69,8 +68,8 @@ export class AvaTestState {
 							if (!test.timestamp || test.timestamp <= timestamp) {
 								test.status = assert.ok;
 								test.timestamp = timestamp;
-							} else console.log('do not update', test.timestamp, timestamp)
-						} else console.log('not test index for '+ path, this.testIndex)
+							} 
+						} 
 					})
 				}
 			}

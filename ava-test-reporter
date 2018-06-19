@@ -6,14 +6,18 @@ const yaml = require('js-yaml');
 const figures = require('figures');
 const indentString = require('indent-string');
 
-const proccessTap = (err, tapOutput) => {
+const verbose = !process.argv.some(arg => arg === '-q' || arg === '--quiet')
+const noRecap = process.argv.some(arg => arg === '--no-recap')
 
+const proccessTap = (err, tapOutput) => {
 	// §FIXME add headline!
-	console.log(`${figures.pointer} Tests statuses:`);
-	tapOutput.asserts.forEach(assert => {
-		const test = _.find(tapOutput.tests, { number: assert.test });
-		console.log(`  ${assert.ok ? figures.tick : figures.cross} ${test.name}`)
-	})
+	if (verbose) {
+		console.log(`${figures.pointer} Tests statuses:`);
+		tapOutput.asserts.forEach(assert => {
+			const test = _.find(tapOutput.tests, { number: assert.test });
+			console.log(`  ${assert.ok ? figures.tick : figures.cross} ${test.name}`)
+		})
+	}
 
 	if (!_.isEmpty(tapOutput.fail)) {
 		console.log(`\n${figures.pointer} Failures:`);
@@ -25,7 +29,7 @@ const proccessTap = (err, tapOutput) => {
 			}
 		})
 	}
-	if (!_.isEmpty(tapOutput.results)) {
+	if (!_.isEmpty(tapOutput.results) && !noRecap) {
 		console.log(`\n${figures.pointer} Summary:`);
 		const symbol = {
 			tests: figures.circle,
