@@ -2,21 +2,81 @@
 	"scopeName": "code.ava-log",
 	"fileTypes": [],
 	"repository": {
-		"colon": {
-			"name": "constant.language.omni-tag",
-			"match": ":"
+		"test-status-line": {
+			"name": "ava-log.test",
+			"begin": "\\s\\s(?=[✔✖])",
+			"end": "$",
+			"patterns": [
+				{
+					"name": "markup.deleted.ava-log",
+					"match": "✖"
+				},
+				{
+					"name": "markup.inserted.ava-log",
+					"match": "✔"
+				},
+				{
+					"name": "variable.other.ava-log",
+					"match": "(?<=›)[^›]+$"
+				},
+				{
+					"name": "constant.language.ava-log",
+					"match": "›"
+				}
+			]
+		}, 
+		"test-failure-line": {
+			"name": "ava-log.failure",
+			"begin": "\\s\\s(?=[⚠])",
+			"end": "$",
+			"patterns": [
+				{
+					"name": "invalid.illegal.ava-log",
+					"match": "⚠"
+				},
+				{
+					"name": "variable.other.ava-log",
+					"match": "(?<=›)[^›]+$"
+				},
+				{
+					"name": "constant.language.ava-log",
+					"match": "›"
+				}
+			]
 		},
-		"keyword": {
-			"name": "support.variable.omni-tag",
-			"match": "(?<=[※§¤:])[\\w_-]+"
+		"test-failure-details": {
+			"name": "ava-log.failure-details",
+			"begin": "^\\s\\s\\s\\s",
+			"end": "$",
+			"patterns": [
+				{
+					"name": "comment.line.ava-log",
+					"match": ".*"
+				}
+			]
 		},
-		"details": {
-			"name": "text.plain.omni-tag",
-			"match": "(?<=:\\s)[^'\"`※§¤:]*(?<!\\s)"
-		},
-		"ponctuation": {
-			"name": "markup.bold.omni-tag",
-			"match": "[!\\?¡¿]"
+		"test-status": {
+			"name": "ava-log.failure-details",
+			"begin": "^\\s\\s(?=[◯◎◌◉])",
+			"end": "$",
+			"patterns": [
+				{
+					"name": "keyword.other.ava-log",
+					"match": "◯ \\d+"
+				},
+				{
+					"name": "support.type.ava-log",
+					"match": "◎ \\d+"
+				},
+				{
+					"name": "support.function.ava-log",
+					"match": "◌ \\d+"
+				},
+				{
+					"name": "invalid.deprecated.ava-log",
+					"match": "◉ \\d+"
+				}
+			]
 		}
 	},
 	"patterns": [
@@ -34,16 +94,16 @@
 			"end": "^$",
 			"patterns": [
 				{
-					"include": "#colon"
+					"include": "#test-status-line"
 				},
 				{
-					"include": "#keyword"
+					"include": "#test-failure-line"
 				},
 				{
-					"include": "#ponctuation"
-				}, {
-					"name": "support.variable",
-					"match": "."
+					"include": "#test-failure-details"
+				},
+				{
+					"include": "#test-status"
 				}
 			]
 		}
