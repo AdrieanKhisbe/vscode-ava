@@ -1,0 +1,44 @@
+#!/usr/bin/env node
+
+const tapOut = require('tap-out');
+const _ = require('lodash');
+const yaml = require('js-yaml')
+const figures = require('figures');
+const indentString = require('indent-string');
+
+const proccessTap = (err, tapOutput) => {
+
+	console.log(`${figures.pointer} Tests statuses`)
+	tapOutput.asserts.forEach(assert => {
+		const test = _.find(tapOutput.tests, {number: assert.test});
+		console.log(`  ${assert.ok ? figures.tick: figures.cross} ${test.name}`)
+	})
+	
+	if(tapOutput.fail) {
+		console.log(`\n${figures.pointer} Failures:`)
+		tapOutput.fail.forEach(fail => {
+			console.log(`  ${figures.warning} ${fail.name}`)
+			const error = _.pickBy(_.omit(fail.error, 'raw'))
+			if(error){
+				console.log(indentString(yaml.dump(error), 4))
+			}
+				else
+				console.log('No available error', fail)
+		} )
+	}
+	if(tapOutput.results){
+		console.log(`\n${figures.pointer} Summary:`)
+		const symbol = {tests: figures.circle,
+		pass: figures.circleDouble,
+		skip: figures.circleDotted,
+		fail: figures.circleFilled
+		}
+		tapOutput.results.forEach(result => {
+			console.log(`  ${symbol[result.name]} ${result.count} ${result.name}`)
+		})
+	}
+}
+
+const parser = tapOut(proccessTap);
+
+process.stdin.pipe(parser);
