@@ -3,6 +3,11 @@ import { getAllTestFiles, encodeFilePath } from './ava-test-resolver'
 import { basename } from 'path';
 
 
+export function runTest(args){
+	const cwd = args && args.cwd || vscode.workspace.workspaceFolders[0];
+	const file = args && args.file;
+}
+
 function getTestTasks() {
 	const cwd = vscode.workspace.workspaceFolders[0]; // §TODO get current
 	return getAllTestFiles(cwd.uri.path).then((testFiles: string[]) => {

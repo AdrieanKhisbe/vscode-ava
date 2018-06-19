@@ -15,13 +15,13 @@ export class AvaNodeProvider implements vscode.TreeDataProvider<AvaTestItem> {
 		this.testState = new AvaTestState(
 			vscode.workspace.workspaceFolders[0].uri.path,
 			() => this._onDidChangeTreeData.fire()
-		)
-		this.testState.load()
-		this.testState.watchStatus()
+		);
+		this.testState.load();
+		this.testState.watchStatus();
 	}
 
 	refresh(): void {
-		this.testState.load()
+		this.testState.load();
 	}
 
 	getTreeItem(element: AvaTestItem): vscode.TreeItem {
@@ -52,6 +52,7 @@ export class AvaNodeProvider implements vscode.TreeDataProvider<AvaTestItem> {
 	}
 
 	getChildren(element?: AvaTestItem): Thenable<AvaTestItem[]> {
+		//§TODO handle multi-workspace
 		if (element && element.item instanceof AvaTestFile) {
 			return Bromise.resolve(
 				element.item.tests.map(

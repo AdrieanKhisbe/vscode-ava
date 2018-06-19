@@ -35,6 +35,14 @@
     ],
     "commands": [
       {
+        "command": "ava.test-runner.run",
+        "title": "AVA: run tests",
+        "icon": {
+          "light": "resources/dark/refresh.svg",
+          "dark": "resources/light/refresh.svg"
+        }
+      },
+      {
         "command": "ava.test-tree.refresh",
         "title": "AVA: refresh test outline",
         "icon": {

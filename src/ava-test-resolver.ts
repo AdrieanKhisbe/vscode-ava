@@ -1,14 +1,14 @@
 import { exec } from 'child_process';
 import * as fs from 'fs';
 import {join, sep} from 'path';
-import * as globby from 'globby'
-import * as tapOut from 'tap-out'
+import * as globby from 'globby';
+import * as tapOut from 'tap-out';
 import * as Bromise from 'bluebird';
 import * as AvaFiles from 'ava/lib/ava-files';
 require('ava/lib/chalk').set({enabled: false});
-import * as avaPrefixTitle from 'ava/lib/reporters/prefix-title'
-import { Readable } from 'stream'
-import { AvaTest } from './ava-test'
+import * as avaPrefixTitle from 'ava/lib/reporters/prefix-title';
+import { Readable } from 'stream';
+import { AvaTest } from './ava-test';
 
 export const encodeFilePath = path => {
 	const parts = path.split(sep);
