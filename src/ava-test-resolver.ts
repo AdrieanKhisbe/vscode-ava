@@ -19,7 +19,9 @@ export const getAllTestFiles = (cwd: string, files?: string[]) => {
 	return Bromise.resolve(files || globby(['**/*'], { cwd, ignore: ['node_modules/**'] })).then(
 		(candidateFiles: string[]) => {
 			const avafileMatcher = new AvaFiles({ cwd });
-			return candidateFiles.filter(filePath => avafileMatcher.isTest(filePath))
+			return candidateFiles
+			.filter(filePath => avafileMatcher.isTest(filePath))
+			.map(path => path.replace(new RegExp(`^${cwd}`, '')));
 		}
 	).catch(console.log)
 }
@@ -49,6 +51,7 @@ export const getTestFromFile = (cwd: string, file: string, prefix: string): Brom
 
 export const getTestResultForFile = (file?: string) => {
 	const resultPath = `/tmp/vscode-ava/tests-${file ? encodeFilePath(file) : 'ALL'}-exec.tap`
+	console.log(resultPath)
 	return Bromise.fromCallback(callback => {
 		if (!fs.existsSync(resultPath))
 			return callback(null, null);

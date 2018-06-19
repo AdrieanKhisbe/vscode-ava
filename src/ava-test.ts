@@ -23,13 +23,15 @@ export class AvaTest {
 		if (this.special) {
 			return `<${this.type}>` + (this.label ? `: ${this.label}` : '')
 		}
-		return (this.label || '<anonymous test>') + ` status: ${this.status}`
+		return this.label || '<anonymous test>'
 	}
 }
 export class AvaTestFile {
 	file: String
-	constructor(public label: string, public path: string, public tests: AvaTest[]) {
-		this.file = basename(path)
+	absolutePath: string
+	constructor(public label: string, public cwd: string, public path: string, public tests: AvaTest[]) {
+		this.file = basename(path);
+		this.absolutePath = join(cwd, path);
 	}
 	public getDescription() {
 		return this.file;

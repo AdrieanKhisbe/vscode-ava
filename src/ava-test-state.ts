@@ -43,7 +43,7 @@ export class AvaTestState {
 								return acc;
 							}, {})
 							this.testIndex[encodeFilePath(path)] = testDict
-							return new AvaTestFile(`test file ${index}`, join(this.cwd, path), tests)
+							return new AvaTestFile(`test file ${index}`, this.cwd, path, tests)
 						}
 					).catch(console.error)
 			})
@@ -57,14 +57,11 @@ export class AvaTestState {
 	private handleTestStatusForFile(path?: string) {
 		return getTestResultForFile(path)
 			.then(testResults => {
-				if (testResults) {
-					console.log('TR', testResults)
-					const timestampComment = testResults.comments[testResults.comments.length - 1];
-				console.log('TSC', timestampComment)
+				if (testResults) {	
+					console.log(testResults.comments)
+					const timestampComment = testResults.comments[testResults.comments.length - 1];	
 					const timestamp = new Date(timestampComment.raw);
-					console.log(timestampComment.raw, timestamp)
 					testResults.asserts.forEach(assert => {
-
 						const testTitle = testResults.tests[assert.test - 1].name
 						const indexForPath = this.testIndex[encodeFilePath(path)]
 						if (indexForPath && indexForPath[testTitle]) {

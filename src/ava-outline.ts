@@ -28,9 +28,14 @@ export class AvaNodeProvider implements vscode.TreeDataProvider<AvaTestItem> {
 	runTests(test: AvaTest | AvaTestFile): void {
 		console.log('Running test for ', test)
 		if (test instanceof AvaTestFile) {
+			console.log('XXXX', test.path)
 			runTests({file: test.path}); // §todo cwd handling
 		} else {
-			runTests({file: test.path, label: test.label});
+			console.log('YYYYYYY')
+			if(test.special)
+			  vscode.window.showInformationMessage(`${test.getDescription()} is not runnable.`)
+			else
+			  runTests({file: test.path, label: test.label});
 		}
 	}
 
@@ -66,7 +71,7 @@ export class AvaNodeProvider implements vscode.TreeDataProvider<AvaTestItem> {
 		if (element && element.item instanceof AvaTestFile) {
 			return Bromise.resolve(
 				element.item.tests.map(
-					test => new AvaTestItem(test, vscode.TreeItemCollapsibleState.None)
+					test =>  new AvaTestItem(test, vscode.TreeItemCollapsibleState.None)
 				)
 			)
 		}

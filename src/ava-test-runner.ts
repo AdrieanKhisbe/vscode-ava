@@ -2,19 +2,20 @@ import * as vscode from 'vscode';
 import * as stripAnsi from 'strip-ansi';
 import * as Bromise from 'bluebird';
 import { spawn } from 'child_process';
+import { encodeFilePath } from './ava-test-resolver'
 
 let outputChannel: vscode.OutputChannel;
 export function runTests(args) {
 	const cwd = args && args.cwd || vscode.workspace.workspaceFolders[0].uri.path;
 	const file = args && args.file;
+	const hashedfile = encodeFilePath(file)
 	const label = args && file && args.label;
-	// §todo filtering by file
-
+	
 	if (!outputChannel)
 	 	outputChannel = vscode.window.createOutputChannel('AVA');
 
-	const cmd = label? `ava --tap ${file} --match "${label}" | ${__dirname}/../ava-test-runner "${file}" "${label}" | ${__dirname}/../ava-test-reporter`
-	: `ava --tap ${file||''} | ${__dirname}/../ava-test-runner ${file || 'ALL'} | ${__dirname}/../ava-test-reporter`;
+	const cmd = label ? `ava ${file} --match "${label}" --tap | ${__dirname}/../ava-test-runner "${hashedfile}" "${label}"`// | ${__dirname}/../ava-test-reporter
+	: `ava --tap ${file||''} | ${__dirname}/../ava-test-runner ${hashedfile || 'ALL'} | ${__dirname}/../ava-test-reporter`;
 	console.log(cmd, cwd)
 	return Bromise.fromCallback(callback => {
 		const ava = spawn('sh', ['-c', cmd], {cwd})

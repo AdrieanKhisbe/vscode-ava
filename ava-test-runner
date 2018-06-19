@@ -8,7 +8,17 @@ if [ -z "$2" ] ; then
     cat - | tee $save_test_path
     date -R >> $save_test_path
 else
-  cat - # No saving of current test for now 
-  # §later: update tap. status
+  cat - | tee "$save_test_path-$2.tap" #§todo put in tmp nested dir
+  # update tap status of specific test
+  test_line="$(cat "$save_test_path-$2.tap" | grep -E "^(not )?ok \d+ -" )"
+  line_to_update="$(cat "$save_test_path" | grep -E "^(not )?ok \d+ -" | grep "$2" )"
+  #echo line_to_update "$line_to_update" >/dev/stderr
+  if [[ "$test_line" =~ ^not* ]] ; then new_status="not ok" ; else new_status="ok" ; fi
+  new_line="$(echo "$line_to_update" | sed -E "s:^(not )?ok:$new_status:")"
+  #echo new_line $new_line > /dev/stderr
+  sed -i -e "s:$line_to_update:$new_line:" "$save_test_path"
+  #echo "updated test '$2'" >> "$save_test_path"
+  date -R >> "$save_test_path"
+  # §todo update timestamp
 fi
 cd $cdir
