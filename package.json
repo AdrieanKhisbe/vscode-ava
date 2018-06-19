@@ -49,6 +49,14 @@
           "light": "resources/light/refresh.svg",
           "dark": "resources/dark/refresh.svg"
         }
+      },
+      {
+        "command": "ava.test-tree.run-tests",
+        "title": "AVA: run associated tests",
+        "icon": {
+          "light": "resources/running.svg",
+          "dark": "resources/running.svg"
+        }
       }
     ],
     "views": {
@@ -66,7 +74,14 @@
           "when": "view == ava.test-tree",
           "group": "navigation"
         }
-      ]
+      ],
+			"view/item/context": [
+				{
+					"command": "ava.test-tree.run-tests",
+					"when": "view == ava.test-tree",
+					"group": "inline"
+				}
+			]
     },
     "languages": [
       {

@@ -2,6 +2,7 @@ import * as vscode from 'vscode';
 import * as path from 'path';
 import { AvaTestState } from './ava-test-state'
 import { AvaTest, AvaTestFile } from './ava-test';
+import {runTests} from './ava-test-runner';
 import * as Bromise from 'bluebird';
 
 export class AvaNodeProvider implements vscode.TreeDataProvider<AvaTestItem> {
@@ -22,6 +23,16 @@ export class AvaNodeProvider implements vscode.TreeDataProvider<AvaTestItem> {
 
 	refresh(): void {
 		this.testState.load();
+	}
+
+	runTests(test: AvaTest | AvaTestFile): void {
+		console.log('Running test for ', test)
+		if (test instanceof AvaTestFile) {
+			runTests({file: test.path}); // §todo cwd handling
+		} else {
+			console.log('later running test for cmd')
+			//runTests({file: test.path, test: test.label});
+		}
 	}
 
 	getTreeItem(element: AvaTestItem): vscode.TreeItem {

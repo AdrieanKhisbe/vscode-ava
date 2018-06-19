@@ -7,11 +7,13 @@ let outputChannel: vscode.OutputChannel;
 export function runTests(args) {
 	const cwd = args && args.cwd || vscode.workspace.workspaceFolders[0].uri.path;
 	const file = args && args.file;
+	const test = args && args.test;
+	// §todo filtering by file
 
 	if (!outputChannel)
 	 	outputChannel = vscode.window.createOutputChannel('AVA');
 
-    const cmd = `ava --tap | ${__dirname}/../ava-test-runner ${file || 'ALL'} | ${__dirname}/../ava-test-reporter`;
+    const cmd = `ava --tap ${file||''} | ${__dirname}/../ava-test-runner ${file || 'ALL'} | ${__dirname}/../ava-test-reporter`;
 	console.log(cmd, cwd)
 	return Bromise.fromCallback(callback => {
 		const ava = spawn('sh', ['-c', cmd], {cwd})

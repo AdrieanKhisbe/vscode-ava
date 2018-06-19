@@ -8,6 +8,7 @@ export function activate(context: vscode.ExtensionContext) {
     vscode.window.registerTreeDataProvider('ava.test-tree', avaTreeProvider);
     vscode.commands.registerCommand('ava.test-tree.refresh', () => avaTreeProvider.refresh());
     vscode.commands.registerCommand('ava.test-tree.openSelection', item => avaTreeProvider.openSelection(item));
+    vscode.commands.registerCommand('ava.test-tree.run-tests', args => avaTreeProvider.runTests(args.item));
 
     vscode.commands.registerCommand('ava.test-runner.run', runTests);
 
