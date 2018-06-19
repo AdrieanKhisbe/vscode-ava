@@ -67,7 +67,26 @@
           "group": "navigation"
         }
       ]
-    }
+    },
+    "languages": [
+      {
+        "id": "AVA-log",
+        "aliases": [
+          "log"
+        ],
+        "mimetypes": [
+          "text/x-code-output",
+          "x-code-output"
+        ]
+      }
+    ],
+    "grammars": [
+      {
+        "language": "AVA-log",
+        "scopeName": "code.ava-log",
+        "path": "./syntaxes/ava-log.tmLanguage.json"
+      }
+    ]
   },
   "scripts": {
     "vscode:prepublish": "npm run compile",

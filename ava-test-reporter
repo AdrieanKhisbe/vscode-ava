@@ -7,6 +7,8 @@ const figures = require('figures');
 const indentString = require('indent-string');
 
 const proccessTap = (err, tapOutput) => {
+
+	// §FIXME add headline!
 	console.log(`${figures.pointer} Tests statuses:`);
 	tapOutput.asserts.forEach(assert => {
 		const test = _.find(tapOutput.tests, { number: assert.test });
@@ -19,7 +21,7 @@ const proccessTap = (err, tapOutput) => {
 			console.log(`  ${figures.warning} ${fail.name}`);
 			const error = _.pickBy(_.omit(fail.error, 'raw'));
 			if (error) {
-				console.log(indentString(yaml.dump(error), 4));
+				console.log(indentString(yaml.dump(error).trim(), 4));
 			}
 		})
 	}

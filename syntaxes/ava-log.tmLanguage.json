@@ -1,0 +1,51 @@
+{
+	"scopeName": "code.ava-log",
+	"fileTypes": [],
+	"repository": {
+		"colon": {
+			"name": "constant.language.omni-tag",
+			"match": ":"
+		},
+		"keyword": {
+			"name": "support.variable.omni-tag",
+			"match": "(?<=[※§¤:])[\\w_-]+"
+		},
+		"details": {
+			"name": "text.plain.omni-tag",
+			"match": "(?<=:\\s)[^'\"`※§¤:]*(?<!\\s)"
+		},
+		"ponctuation": {
+			"name": "markup.bold.omni-tag",
+			"match": "[!\\?¡¿]"
+		}
+	},
+	"patterns": [
+		{
+			"name": "section-test",
+			"begin": "(❯) (.*)",
+			"beginCaptures": {
+				"1": {
+					"name": "keyword.ava-log"
+				},
+				"2": {
+					"name": "constant.language.ava-log"
+				}
+			},
+			"end": "^$",
+			"patterns": [
+				{
+					"include": "#colon"
+				},
+				{
+					"include": "#keyword"
+				},
+				{
+					"include": "#ponctuation"
+				}, {
+					"name": "support.variable",
+					"match": "."
+				}
+			]
+		}
+	]
+}
