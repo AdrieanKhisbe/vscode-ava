@@ -4,6 +4,11 @@ dir="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 cdir="$(pwd)"
 cd $dir
 save_test_path="/tmp/vscode-ava/tests-$1-exec.tap"
-cat - | tee $save_test_path
-date -R >> $save_test_path
+if [ -z "$2" ] ; then
+    cat - | tee $save_test_path
+    date -R >> $save_test_path
+else
+  cat - # No saving of current test for now 
+  # §later: update tap. status
+fi
 cd $cdir

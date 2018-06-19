@@ -15,7 +15,7 @@ const proccessTap = (err, tapOutput) => {
 		console.log(`  ${assert.ok ? figures.tick : figures.cross} ${test.name}`)
 	})
 
-	if (tapOutput.fail) {
+	if (!_.isEmpty(tapOutput.fail)) {
 		console.log(`\n${figures.pointer} Failures:`);
 		tapOutput.fail.forEach(fail => {
 			console.log(`  ${figures.warning} ${fail.name}`);
@@ -25,7 +25,7 @@ const proccessTap = (err, tapOutput) => {
 			}
 		})
 	}
-	if (tapOutput.results) {
+	if (!_.isEmpty(tapOutput.results)) {
 		console.log(`\n${figures.pointer} Summary:`);
 		const symbol = {
 			tests: figures.circle,
@@ -37,6 +37,7 @@ const proccessTap = (err, tapOutput) => {
 			console.log(`  ${symbol[result.name]} ${result.count} ${result.name}`);
 		})
 	}
+	console.log('\n-----');
 }
 
 const parser = tapOut(proccessTap);

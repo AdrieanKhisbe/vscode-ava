@@ -30,8 +30,7 @@ export class AvaNodeProvider implements vscode.TreeDataProvider<AvaTestItem> {
 		if (test instanceof AvaTestFile) {
 			runTests({file: test.path}); // §todo cwd handling
 		} else {
-			console.log('later running test for cmd')
-			//runTests({file: test.path, test: test.label});
+			runTests({file: test.path, label: test.label});
 		}
 	}
 
