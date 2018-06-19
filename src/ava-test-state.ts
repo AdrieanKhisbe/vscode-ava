@@ -16,13 +16,15 @@ export class AvaTestState {
 	testFilesIndex: Object;
 	globalTestIndex: Object;
 	rootFolder: AvaTestFolder;
+	public readonly cwd: string
 	private testWatcher;
 	private readonly notifyChange
-	constructor(public cwd: string, notifyChange?) {
+	constructor(public workspace: vscode.WorkspaceFolder, notifyChange?) {
+		this.cwd = workspace.uri.path;
 		this.testIndex = [];
 		this.testFilePaths = [];
 		this.testFiles = [];
-		this.rootFolder = new AvaTestFolder('root', cwd, '.', []);
+		this.rootFolder = new AvaTestFolder(this.workspace.name, this.cwd, '.', []);
 		this.testFilesIndex = {};
 		this.globalTestIndex = {};
 		this.notifyChange = notifyChange ? notifyChange : () => { }
@@ -59,7 +61,7 @@ export class AvaTestState {
 			})
 				.then(testFiles => {
 					this.testFiles = testFiles;
-					this.rootFolder = this.populateFolder(this.testFilesIndex, "root", this.prefix)
+					this.rootFolder = this.populateFolder(this.testFilesIndex, this.workspace.name, this.prefix)
 					this.notifyChange();
 				})
 		})

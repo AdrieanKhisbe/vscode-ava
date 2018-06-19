@@ -1,8 +1,9 @@
 import * as vscode from 'vscode';
 import * as path from 'path';
+import * as _ from 'lodash';
 import { AvaTestState } from './ava-test-state'
 import { AvaTest, AvaTestFile, AvaTestFolder } from './ava-test';
-import {runTests} from './ava-test-runner';
+import { runTests } from './ava-test-runner';
 import * as Bromise from 'bluebird';
 
 export class AvaNodeProvider implements vscode.TreeDataProvider<AvaTestItem> {
@@ -10,29 +11,32 @@ export class AvaNodeProvider implements vscode.TreeDataProvider<AvaTestItem> {
 	private _onDidChangeTreeData: vscode.EventEmitter<AvaTestItem | undefined> = new vscode.EventEmitter<AvaTestItem | undefined>();
 	readonly onDidChangeTreeData: vscode.Event<AvaTestItem | undefined> = this._onDidChangeTreeData.event;
 
-	private readonly testState: AvaTestState
+	private readonly testStates: AvaTestState[]
 	constructor() {
-		// §todo: handling multi workspace
-		this.testState = new AvaTestState(
-			vscode.workspace.workspaceFolders[0].uri.path,
-			() => this._onDidChangeTreeData.fire()
-		);
-		this.testState.load();
-		this.testState.watchStatus();
+		this.testStates = _.map(vscode.workspace.workspaceFolders,
+			(workspace: vscode.WorkspaceFolder) => {
+				const testState = new AvaTestState(
+					workspace,
+					() => this._onDidChangeTreeData.fire()
+				)
+				testState.load();
+				testState.watchStatus();
+				return testState;
+			});
 	}
 
 	refresh(): void {
-		this.testState.load();
+		this.testStates.map(ts => ts.load());
 	}
 
 	runTests(test: AvaTest | AvaTestFile): void {
 		if (test instanceof AvaTestFile) {
-			runTests({file: test.path}); // §todo cwd handling (prompting if several)
+			runTests({ file: test.path }); // §todo cwd handling (prompting if several)
 		} else {
-			if(test.special)
-			  vscode.window.showInformationMessage(`${test.getDescription()} is not runnable.`)
+			if (test.special)
+				vscode.window.showInformationMessage(`${test.getDescription()} is not runnable.`)
 			else
-			  runTests({file: test.path, label: test.label});
+				runTests({ file: test.path, label: test.label });
 		}
 	}
 
@@ -68,25 +72,28 @@ export class AvaNodeProvider implements vscode.TreeDataProvider<AvaTestItem> {
 		if (element && element.item instanceof AvaTestFile) {
 			return Bromise.resolve(
 				element.item.tests.map(
-					test =>  new AvaTestItem(test, vscode.TreeItemCollapsibleState.None)
+					test => new AvaTestItem(test, vscode.TreeItemCollapsibleState.None)
 				)
 			)
 		}
 		if (element && element.item instanceof AvaTestFolder) {
 			return Bromise.resolve(
 				element.item.content.map(
-					test =>  new AvaTestItem(test, vscode.TreeItemCollapsibleState.Expanded)
+					test => new AvaTestItem(test, vscode.TreeItemCollapsibleState.Expanded)
 				)
 			)
 		}
-		try{
-
-			return Bromise.resolve(this.testState.rootFolder.content.map(
-				(tfd: AvaTestFile) =>new AvaTestItem(tfd, vscode.TreeItemCollapsibleState.Expanded)
+		if (this.testStates.length === 1) {
+			return Bromise.resolve(this.testStates[0].rootFolder.content.map(
+				(tfd: AvaTestFile) => new AvaTestItem(tfd, vscode.TreeItemCollapsibleState.Expanded)
 			));
-	}
+		} else {
+			return Bromise.resolve(this.testStates.map(
+				(ts: AvaTestState) => new AvaTestItem(ts.rootFolder, vscode.TreeItemCollapsibleState.Expanded)
+			));
+		}
 
-}
+	}
 
 class AvaTestItem extends vscode.TreeItem {
 	constructor(
