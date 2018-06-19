@@ -9,21 +9,20 @@ const collectTestMock = type => function (testTitle, implementation) {
 	const title = typeof testTitle === 'string' ? testTitle : ''
 	testList.push([title, st[1].getLineNumber(), type])
 }
-const avaMock = {
-	test: collectTestMock('standard')
-};
-avaMock.test.cb = collectTestMock('standard');
-avaMock.test.serial = collectTestMock('standard');
-avaMock.test.only = collectTestMock('standard');
-avaMock.test.skip = collectTestMock('skip');
-avaMock.test.todo = collectTestMock('todo');
-avaMock.test.failing = collectTestMock('failing');
-avaMock.test.before = collectTestMock('before');
-avaMock.test.beforeEach = collectTestMock('beforeEach');
-avaMock.test.after = collectTestMock('after');
-avaMock.test.afterEach = collectTestMock('afterEach');
+const test = collectTestMock('standard');
+test.cb = collectTestMock('standard');
+test.serial = collectTestMock('standard');
+test.only = collectTestMock('standard');
+test.skip = collectTestMock('skip');
+test.todo = collectTestMock('todo');
+test.failing = collectTestMock('failing');
+test.before = collectTestMock('before');
+test.beforeEach = collectTestMock('beforeEach');
+test.after = collectTestMock('after');
+test.afterEach = collectTestMock('afterEach');
+test.test = test; // testinception
 
-mock('ava',avaMock);
+mock('ava', test);
 
 require(process.argv[2]);
 mock.stop('ava')
