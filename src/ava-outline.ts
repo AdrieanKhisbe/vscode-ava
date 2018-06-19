@@ -1,7 +1,7 @@
 import * as vscode from 'vscode';
 import * as path from 'path';
 import { AvaTestState } from './ava-test-state'
-import { AvaTest, AvaTestFile } from './ava-test';
+import { AvaTest, AvaTestFile, AvaTestFolder } from './ava-test';
 import {runTests} from './ava-test-runner';
 import * as Bromise from 'bluebird';
 
@@ -72,17 +72,25 @@ export class AvaNodeProvider implements vscode.TreeDataProvider<AvaTestItem> {
 				)
 			)
 		}
-		return Bromise.resolve(this.testState.testFiles.map(
-			(tfd: AvaTestFile) => new AvaTestItem(tfd, vscode.TreeItemCollapsibleState.Expanded)
-		));
+		if (element && element.item instanceof AvaTestFolder) {
+			return Bromise.resolve(
+				element.item.content.map(
+					test =>  new AvaTestItem(test, vscode.TreeItemCollapsibleState.Expanded)
+				)
+			)
+		}
+		try{
 
+			return Bromise.resolve(this.testState.rootFolder.content.map(
+				(tfd: AvaTestFile) =>new AvaTestItem(tfd, vscode.TreeItemCollapsibleState.Expanded)
+			));
 	}
 
 }
 
 class AvaTestItem extends vscode.TreeItem {
 	constructor(
-		public readonly item: AvaTest | AvaTestFile,
+		public readonly item: AvaTest | AvaTestFile | AvaTestFolder,
 		public readonly collapsibleState: vscode.TreeItemCollapsibleState,
 		public command?: vscode.Command
 	) {
@@ -92,8 +100,10 @@ class AvaTestItem extends vscode.TreeItem {
 	get tooltip(): string {
 		if (this.item instanceof AvaTest)
 			return `${this.item.getDescription()} - ${this.item.type} - line ${this.item.line}`;
-		else
+		else if (this.item instanceof AvaTestFile)
 			return `${this.label} - ${this.item.tests.length} tests`
+		else
+			return `${this.label} test folder`;
 	}
 	get iconPath() {
 		return {

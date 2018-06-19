@@ -44,3 +44,18 @@ export class AvaTestFile {
 	}
 }
 
+export class AvaTestFolder {
+	absolutePath: string
+	constructor(public folderName: string, public cwd: string, public path: string, public content: Array<AvaTestFile|AvaTestFolder>) {
+		this.absolutePath = join(cwd, path);
+	}
+	public getDescription() {
+		return this.folderName;
+	}
+
+	get iconStatus() {
+	   // §TODO implement
+	   return 'pending'	
+	}
+}
+

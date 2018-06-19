@@ -1,7 +1,8 @@
 import * as vscode from 'vscode';
-import { join } from 'path';
-import { getAllTestFiles, getTestFromFile, getTestResultForFile, encodeFilePath} from './ava-test-resolver'
-import { AvaTest, AvaTestFile } from './ava-test';
+import * as _ from 'lodash';
+import { sep, join } from 'path';
+import { getAllTestFiles, getTestFromFile, getTestResultForFile, encodeFilePath } from './ava-test-resolver'
+import { AvaTest, AvaTestFile, AvaTestFolder } from './ava-test';
 import * as Bromise from 'bluebird';
 import * as chokidar from 'chokidar';
 import * as commonPathPrefix from 'common-path-prefix';
@@ -10,14 +11,19 @@ export class AvaTestState {
 
 	testFiles: AvaTestFile[];
 	testFilePaths: string[];
+	prefix: string;
 	testIndex: Object;
+	testFilesIndex: Object;
 	globalTestIndex: Object;
+	rootFolder: AvaTestFolder;
 	private testWatcher;
 	private readonly notifyChange
 	constructor(public cwd: string, notifyChange?) {
 		this.testIndex = [];
 		this.testFilePaths = [];
 		this.testFiles = [];
+		this.rootFolder = new AvaTestFolder('root', cwd, '.', []);
+		this.testFilesIndex = {};
 		this.globalTestIndex = {};
 		this.notifyChange = notifyChange ? notifyChange : () => { }
 	}
@@ -29,12 +35,14 @@ export class AvaTestState {
 	}
 	computeAvailableTests(): Promise<void> {
 		return getAllTestFiles(this.cwd).then(testFiles => {
+			console.log(testFiles)
 			this.testFilePaths = testFiles;
-			const prefix = commonPathPrefix(testFiles)
+			this.prefix = commonPathPrefix(testFiles)
+			const prefixRegex = new RegExp(`^${this.prefix}`);
 			this.testIndex = {}
 			this.globalTestIndex = {}
 			return Bromise.map(testFiles, (path: string, index: Number) => {
-				return getTestFromFile(this.cwd, path, prefix)
+				return getTestFromFile(this.cwd, path, this.prefix)
 					.then(
 						(tests: AvaTest[]) => {
 							const testDict = tests.reduce((acc, val: AvaTest) => {
@@ -42,23 +50,38 @@ export class AvaTestState {
 								if (val.avaFullTitle) this.globalTestIndex[val.avaFullTitle] = val;
 								return acc;
 							}, {})
-							this.testIndex[encodeFilePath(path)] = testDict
-							return new AvaTestFile(`test file ${index}`, this.cwd, path, tests)
+							this.testIndex[encodeFilePath(path)] = testDict;
+							const testFile = new AvaTestFile(`test file ${index}`, this.cwd, path, tests);
+							_.set(this.testFilesIndex, path.replace(prefixRegex, '').split(sep), testFile)
+							return testFile
 						}
 					).catch(console.error)
 			})
 				.then(testFiles => {
 					this.testFiles = testFiles;
-					this.notifyChange()
+					this.rootFolder = this.populateFolder(this.testFilesIndex, "root", this.prefix)
+					this.notifyChange();
 				})
 		})
+	}
+
+	private populateFolder(fileTree, folderName, path) {
+		return new AvaTestFolder(folderName, this.cwd, path,
+			_.map(fileTree, (value, key) => {
+				if (value instanceof AvaTestFile) {
+					return value;
+				} else {
+					return this.populateFolder(value, key, join(path, key));
+				}
+			})
+		)
 	}
 
 	private handleTestStatusForFile(path?: string) {
 		return getTestResultForFile(path)
 			.then(testResults => {
 				if (testResults) {
-					const timestampComment = testResults.comments[testResults.comments.length - 1];	
+					const timestampComment = testResults.comments[testResults.comments.length - 1];
 					const timestamp = new Date(timestampComment.raw);
 					testResults.asserts.forEach(assert => {
 						const testTitle = testResults.tests[assert.test - 1].name
@@ -68,8 +91,8 @@ export class AvaTestState {
 							if (!test.timestamp || test.timestamp <= timestamp) {
 								test.status = assert.ok;
 								test.timestamp = timestamp;
-							} 
-						} 
+							}
+						}
 					})
 				}
 			}

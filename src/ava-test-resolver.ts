@@ -50,8 +50,7 @@ export const getTestFromFile = (cwd: string, file: string, prefix: string): Brom
 }
 
 export const getTestResultForFile = (file?: string) => {
-	const resultPath = `/tmp/vscode-ava/tests-${file ? encodeFilePath(file) : 'ALL'}-exec.tap`
-	console.log(resultPath)
+	const resultPath = `/tmp/vscode-ava/tests-${file ? encodeFilePath(file) : 'ALL'}-exec.tap`;
 	return Bromise.fromCallback(callback => {
 		if (!fs.existsSync(resultPath))
 			return callback(null, null);
