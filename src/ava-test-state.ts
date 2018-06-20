@@ -7,6 +7,12 @@ import * as Bromise from 'bluebird';
 import * as chokidar from 'chokidar';
 import * as commonPathPrefix from 'common-path-prefix';
 
+interface TapAssert {
+	raw: string
+	test: number
+	ok: boolean
+}
+
 export class AvaTestState {
 
 	testFiles: AvaTestFile[];
@@ -98,7 +104,7 @@ export class AvaTestState {
 				if (testResults) {
 					const timestampComment = testResults.comments[testResults.comments.length - 1];
 					const timestamp = new Date(timestampComment.raw);
-					testResults.asserts.forEach(assert => {
+					testResults.asserts.forEach((assert: TapAssert) => {
 						const testTitle = testResults.tests[assert.test - 1].name
 						const indexForPath = this.testIndex[encodeFilePath(path)]
 						if (indexForPath && indexForPath[testTitle]) {
@@ -120,8 +126,7 @@ export class AvaTestState {
 				if (testResults) {
 					const timestampComment = testResults.comments[testResults.comments.length - 1];
 					const timestamp = new Date(timestampComment.raw);
-					testResults.asserts.forEach(assert => {
-
+					testResults.asserts.forEach((assert: TapAssert) => {
 						const testTitle = testResults.tests[assert.test - 1].name
 						const test: AvaTest = folder.testIndex[testTitle];
 						if (test && (!test.timestamp || test.timestamp <= timestamp)) {
