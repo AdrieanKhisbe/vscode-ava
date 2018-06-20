@@ -1,5 +1,5 @@
-import { basename, join, sep } from 'path';
-import * as _ from 'lodash';
+import { basename, join} from 'path';
+import {flatMap} from 'lodash';
 require('ava/lib/chalk').set({ enabled: false }); // hack because of AVA
 import * as avaPrefixTitle from 'ava/lib/reporters/prefix-title';
 
@@ -30,7 +30,7 @@ export class AvaTest {
 	}
 }
 export class AvaTestFile {
-	file: String
+	file: string
 	absolutePath: string
 	constructor(public label: string, public cwd: string, public path: string, public tests: AvaTest[]) {
 		this.file = basename(path);
@@ -48,7 +48,7 @@ export class AvaTestFile {
 }
 
 export class AvaTestFolder {
-	testIndex: Object
+	testIndex: {[index: string]: AvaTest}
 	absolutePath: string
 	constructor(public folderName: string, public cwd: string, public path: string, public content: Array<AvaTestFile | AvaTestFolder>) {
 		this.absolutePath = join(cwd, path);
@@ -64,12 +64,12 @@ export class AvaTestFolder {
 	}
 
 	private getTestIndex() {
-		const getAllTestFiles = tree =>_.flatMap(tree, (subtree: AvaTestFile|AvaTestFolder) => {
+		const getAllTestFiles = (tree: Array<AvaTestFile | AvaTestFolder>) => flatMap(tree, (subtree: AvaTestFile|AvaTestFolder):AvaTestFile|AvaTestFile[] => {
 			if (subtree instanceof AvaTestFile) return subtree;
 			else return getAllTestFiles(subtree.content)
 		});
 		const allTestFiles = getAllTestFiles(this.content);
-		return allTestFiles.reduce((acc, tf: AvaTestFile) => {
+		return allTestFiles.reduce((acc: {[index:string]: AvaTest}, tf: AvaTestFile) => {
 			tf.tests.forEach((test: AvaTest) => {
 				acc[avaPrefixTitle(this.path, test.path, test.label)] = test;
 			})

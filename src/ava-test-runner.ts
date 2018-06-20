@@ -6,30 +6,36 @@ import { encodeFilePath } from './ava-test-resolver'
 
 let outputChannel: vscode.OutputChannel;
 
-export function runTests(args) {
+interface TestArgs {
+	cwd?: string
+	file?: string
+	label?: string
+}
+export function runTests(args: TestArgs) {
 
 	if (!args || !args.cwd) {
-		if (vscode.workspace.workspaceFolders && vscode.workspace.workspaceFolders.length === 1) {
-			_runTests({ cwd: vscode.workspace.workspaceFolders[0].uri.path })
+		const workspaces = vscode.workspace.workspaceFolders
+		if (!workspaces){
+			return vscode.window.showInformationMessage('No workspace folder to run tests for.')
+		}
+		if (workspaces.length === 1) {
+			_runTests({ cwd: workspaces[0].uri.path })
 		} else if (vscode.workspace.workspaceFolders) {
 			vscode.window.showQuickPick(
 				vscode.workspace.workspaceFolders.map(w => w.name),
 				{ placeHolder: 'Please select a root folder to run tests for' })
 				.then(workspaceName => {
 					if (workspaceName) {
-						const workspace: vscode.WorkspaceFolder | undefined =
-							vscode.workspace.workspaceFolders.find((w: vscode.WorkspaceFolder) => w.name === workspaceName)
+						const workspace: vscode.WorkspaceFolder | undefined = workspaces.find((w: vscode.WorkspaceFolder) => w.name === workspaceName)
 						if (workspace) {
 							_runTests({cwd: workspace.uri.path} )
 						}
 					}
 				})
-		} else {
-			vscode.window.showInformationMessage('No workspace folder to run tests for.')
 		}
 	} else _runTests(args);
 }
-export function _runTests(args) {
+export function _runTests(args: TestArgs) {
 	const cwd = args && args.cwd;
 	const file = args && args.file;
 	const hashedcwd = cwd && encodeFilePath(cwd)

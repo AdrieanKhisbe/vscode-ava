@@ -2,6 +2,7 @@ import * as vscode from 'vscode';
 import { getAllTestFiles, encodeFilePath } from './ava-test-resolver'
 import { basename } from 'path';
 
+// §FIXME TO REWORK
 function getTestTasks() {
 	const cwd = vscode.workspace.workspaceFolders[0]; // §TODO get current
 	return getAllTestFiles(cwd.uri.path).then((testFiles: string[]) => {
@@ -27,7 +28,7 @@ function getTestTasks() {
 }
 
 
-export const AvaTestTaskProvider = () => getTestTasks().then((testTasks: vscode.Task[]) => ({
+export const AvaTestTaskProvider: () => Thenable<vscode.TaskProvider> = () => getTestTasks().then((testTasks: vscode.Task[]) => ({
 	provideTasks: () => {
 		return testTasks;
 	},

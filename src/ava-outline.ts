@@ -55,14 +55,16 @@ export class AvaNodeProvider implements vscode.TreeDataProvider<AvaTestItem> {
 		)
 		return vscode.workspace.openTextDocument(location.uri).then(doc => {
 			return vscode.window.showTextDocument(doc).then(editor => {
+				const activeTextEditor = vscode.window.activeTextEditor;
+				if (!activeTextEditor) return;
 				let reviewType: vscode.TextEditorRevealType =
-					(location.range.start.line === vscode.window.activeTextEditor.selection.active.line)
+					(location.range.start.line === activeTextEditor.selection.active.line)
 						? vscode.TextEditorRevealType.InCenterIfOutsideViewport
 						: vscode.TextEditorRevealType.InCenter;
 
 				const testSelection = new vscode.Selection(location.range.start, location.range.end);
-				vscode.window.activeTextEditor.selection = testSelection;
-				vscode.window.activeTextEditor.revealRange(testSelection, reviewType);
+				activeTextEditor.selection = testSelection;
+				activeTextEditor.revealRange(testSelection, reviewType);
 			})
 		})
 	}
@@ -85,7 +87,7 @@ export class AvaNodeProvider implements vscode.TreeDataProvider<AvaTestItem> {
 		}
 		if (this.testStates.length === 1) {
 			return Bromise.resolve(this.testStates[0].rootFolder.content.map(
-				(tfd: AvaTestFile) => new AvaTestItem(tfd, vscode.TreeItemCollapsibleState.Expanded)
+				(tfd: AvaTestFile|AvaTestFolder) => new AvaTestItem(tfd, vscode.TreeItemCollapsibleState.Expanded)
 			));
 		} else {
 			return Bromise.resolve(this.testStates.map(
@@ -94,6 +96,7 @@ export class AvaNodeProvider implements vscode.TreeDataProvider<AvaTestItem> {
 		}
 
 	}
+}
 
 class AvaTestItem extends vscode.TreeItem {
 	constructor(

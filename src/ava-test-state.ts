@@ -1,5 +1,5 @@
 import * as vscode from 'vscode';
-import * as _ from 'lodash';
+import {set, map} from 'lodash';
 import { sep, join } from 'path';
 import { getAllTestFiles, getTestFromFile, getTestResultForFile, encodeFilePath } from './ava-test-resolver'
 import { AvaTest, AvaTestFile, AvaTestFolder } from './ava-test';
@@ -12,19 +12,20 @@ export class AvaTestState {
 	testFiles: AvaTestFile[];
 	testFilePaths: string[];
 	prefix: string;
-	testIndex: Object;
-	folderIndex: Object;
-	testFilesIndex: Object;
-	globalTestIndex: Object;
+	testIndex: {[index: string]: {[index: string]: AvaTest}};
+	folderIndex: {[index: string]: AvaTestFolder};
+	testFilesIndex: {[index: string]: AvaTestFile};
+	globalTestIndex: {[index: string]: AvaTest};
 	rootFolder: AvaTestFolder;
 	public readonly cwd: string;
-	private testWatcher;
-	private readonly notifyChange
-	constructor(public workspace: vscode.WorkspaceFolder, notifyChange?) {
+	private testWatcher?: chokidar.FSWatcher;
+	private readonly notifyChange: () => void
+	constructor(public workspace: vscode.WorkspaceFolder, notifyChange?: () => void) {
 		this.cwd = workspace.uri.path;
 		this.testIndex = {};
 		this.folderIndex = {};
 		this.testFilePaths = [];
+		this.prefix = '';
 		this.testFiles = [];
 		this.rootFolder = new AvaTestFolder(this.workspace.name, this.cwd, '.', []);
 		this.testFilesIndex = {};
@@ -32,12 +33,11 @@ export class AvaTestState {
 		this.notifyChange = notifyChange ? notifyChange : () => { };
 	}
 
-	load(): Promise<void> {
+	load(): Thenable<void> {
 		return this.computeAvailableTests()
-			.then((() => this.updateStatus()))
-			.catch(console.error);
+			.then((() => this.updateStatus()));
 	}
-	computeAvailableTests(): Promise<void> {
+	computeAvailableTests(): Thenable<void> {
 		return getAllTestFiles(this.cwd).then((testFiles: string[]) => {
 			this.testFilePaths = testFiles;
 			this.prefix = commonPathPrefix(testFiles);
@@ -48,16 +48,16 @@ export class AvaTestState {
 				return getTestFromFile(this.cwd, path, this.prefix)
 					.then(
 						(tests: AvaTest[]) => {
-							const testDict = tests.reduce((acc, val: AvaTest) => {
+							const testDict = tests.reduce((acc: {[index: string]: AvaTest}, val: AvaTest) => {
 								if (val.label) acc[val.label] = val;
 								return acc;
 							}, {})
 							this.testIndex[encodeFilePath(path)] = testDict;
 							const testFile = new AvaTestFile(`test file ${index}`, this.cwd, path, tests);
-							_.set(this.testFilesIndex, path.replace(prefixRegex, '').split(sep), testFile);
+							set(this.testFilesIndex, path.replace(prefixRegex, '').split(sep), testFile);
 							return testFile;
 						}
-					).catch(console.error);
+					)
 			})
 				.then(testFiles => {
 					this.testFiles = testFiles;
@@ -67,10 +67,10 @@ export class AvaTestState {
 		})
 	}
 
-	private populateFolder(fileTree, folderName: string, path: string) {
+	private populateFolder(fileTree: {[index: string]: AvaTestFile}, folderName: string, path: string) {
 		const pathTrailingSep = path.endsWith(sep) ? path : path + sep;
-		const folder = new AvaTestFolder(folderName, this.cwd, pathTrailingSep,
-			_.map(fileTree, (value, key) => {
+		const folder: AvaTestFolder = new AvaTestFolder(folderName, this.cwd, pathTrailingSep,
+			map(fileTree, (value, key) => {
 				if (value instanceof AvaTestFile) {
 					return value;
 				} else {
@@ -82,17 +82,17 @@ export class AvaTestState {
 		return folder;
 	}
 
-	private handleTestStatusForTree(tree: AvaTestFolder | AvaTestFile, root = false) {
+	private handleTestStatusForTree(tree: AvaTestFolder | AvaTestFile, root = false) : Thenable<void>{
 		if (tree instanceof AvaTestFile) {
 			return this.handleTestStatusForFile(tree.path);
 		} else {
 			return Bromise.all([
 				this.handleTestStatusFolder(tree, root),
 				Bromise.map(tree.content, (subtree: AvaTestFolder | AvaTestFile) => this.handleTestStatusForTree(subtree))
-			])
+			]).then(() => {});
 		}
 	}
-	private handleTestStatusForFile(path?: string) {
+	private handleTestStatusForFile(path: string) {
 		return getTestResultForFile(this.cwd, path)
 			.then(testResults => {
 				if (testResults) {
@@ -111,7 +111,7 @@ export class AvaTestState {
 					})
 				}
 			}
-			).catch(console.error)
+			)
 	}
 	private handleTestStatusFolder(folder: AvaTestFolder, global = false) {
 		const arg = global ? undefined : folder.path
@@ -134,7 +134,7 @@ export class AvaTestState {
 			).catch(console.error)
 	}
 
-	updateStatus(): Promise<void> {
+	updateStatus(): Thenable<void> {
 		return this.handleTestStatusForTree(this.rootFolder, true)
 			.then(() => { this.notifyChange() })
 	}
@@ -145,7 +145,7 @@ export class AvaTestState {
 			ignoreInitial: true,
 			awaitWriteFinish: true
 		});
-		const changeCallback = (path: String) => {
+		const changeCallback = (path: string) => {
 			const match = new RegExp(`/tmp/vscode-ava/tests-${encodeFilePath(this.cwd)}-(.*)-exec.tap`).exec(path)
 			if (match) {
 				if (match[1] === 'ALL') {

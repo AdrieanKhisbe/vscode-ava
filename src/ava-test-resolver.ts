@@ -13,7 +13,7 @@ export const encodeFilePath = (path: string) => {
 	return parts.join('__slash__')
 }
 
-export const getAllTestFiles = (cwd: string, files?: string[]) => {
+export const getAllTestFiles = (cwd: string, files?: string[]): Thenable<string[]> => {
 	return Bromise.resolve(files || globby(['**/*'], { cwd, ignore: ['node_modules/**'] })).then(
 		(candidateFiles: string[]) => {
 			const avafileMatcher = new AvaFiles({ cwd });
@@ -21,11 +21,11 @@ export const getAllTestFiles = (cwd: string, files?: string[]) => {
 				.filter(filePath => avafileMatcher.isTest(filePath))
 				.map(path => path.replace(new RegExp(`^${cwd}`), ''));
 		}
-	).catch(console.error)
+	)
 }
 
 export const getTestFromFile = (cwd: string, file: string, prefix: string): Bromise<AvaTest[]> => {
-	return Bromise.fromCallback(callback => {
+	return Bromise.fromCallback((callback: (err?: Error|null, data?: Object)=>any) => {
 		const cmd = `${join(__dirname, '..', 'ava-test-resolver')} ${cwd}/${file}`;
 		exec(cmd, (error, stdout, stderr) => {
 			if (error) {
@@ -41,7 +41,7 @@ export const getTestFromFile = (cwd: string, file: string, prefix: string): Brom
 			}
 		})
 	}).then(
-		tests => tests.map(([testLabel, line, type]) => {
+		tests => tests.map(([testLabel, line, type]: [string, number, string]) => {
 			return new AvaTest(testLabel, cwd, file, line, type);
 		})
 	)
