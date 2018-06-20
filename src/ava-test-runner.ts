@@ -10,7 +10,7 @@ export function runTests(args) {
 
 	if (!args || !args.cwd) {
 		if (vscode.workspace.workspaceFolders && vscode.workspace.workspaceFolders.length === 1) {
-			_runTests({ cwd: vscode.workspace.workspaceFolders[0] })
+			_runTests({ cwd: vscode.workspace.workspaceFolders[0].uri.path })
 		} else if (vscode.workspace.workspaceFolders) {
 			vscode.window.showQuickPick(
 				vscode.workspace.workspaceFolders.map(w => w.name),

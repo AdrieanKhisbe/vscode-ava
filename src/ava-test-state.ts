@@ -13,6 +13,7 @@ export class AvaTestState {
 	testFilePaths: string[];
 	prefix: string;
 	testIndex: Object;
+	folderIndex: Object;
 	testFilesIndex: Object;
 	globalTestIndex: Object;
 	rootFolder: AvaTestFolder;
@@ -21,7 +22,8 @@ export class AvaTestState {
 	private readonly notifyChange
 	constructor(public workspace: vscode.WorkspaceFolder, notifyChange?) {
 		this.cwd = workspace.uri.path;
-		this.testIndex = [];
+		this.testIndex = {};
+		this.folderIndex = {};
 		this.testFilePaths = [];
 		this.testFiles = [];
 		this.rootFolder = new AvaTestFolder(this.workspace.name, this.cwd, '.', []);
@@ -49,6 +51,7 @@ export class AvaTestState {
 						(tests: AvaTest[]) => {
 							const testDict = tests.reduce((acc, val: AvaTest) => {
 								if (val.label) acc[val.label] = val;
+								// §FIXME kill vv
 								if (val.avaFullTitle) this.globalTestIndex[val.avaFullTitle] = val;
 								return acc;
 							}, {})
@@ -67,8 +70,9 @@ export class AvaTestState {
 		})
 	}
 
-	private populateFolder(fileTree, folderName, path) {
-		return new AvaTestFolder(folderName, this.cwd, path,
+	private populateFolder(fileTree, folderName: string, path: string) {
+		const pathTrailingSep = path.endsWith(sep) ? path : path + sep;
+		const folder = new AvaTestFolder(folderName, this.cwd, pathTrailingSep,
 			_.map(fileTree, (value, key) => {
 				if (value instanceof AvaTestFile) {
 					return value;
@@ -77,8 +81,20 @@ export class AvaTestState {
 				}
 			})
 		)
+		this.folderIndex[pathTrailingSep] = folder;
+		return folder
 	}
 
+	private handleTestStatusForTree(tree: AvaTestFolder | AvaTestFile, root = false) {
+		if (tree instanceof AvaTestFile) {
+			return this.handleTestStatusForFile(tree.path);
+		} else {
+			return Bromise.all([
+				this.handleTestStatusFolder(tree, root),
+				Bromise.map(tree.content, (subtree: AvaTestFolder | AvaTestFile) => this.handleTestStatusForTree(subtree))
+			])
+		}
+	}
 	private handleTestStatusForFile(path?: string) {
 		return getTestResultForFile(this.cwd, path)
 			.then(testResults => {
@@ -100,17 +116,17 @@ export class AvaTestState {
 			}
 			).catch(console.error)
 	}
-	private handleTestStatusGlobal() {
-		return getTestResultForFile(this.cwd)
+	private handleTestStatusFolder(folder: AvaTestFolder, global = false) {
+		const arg = global ? undefined : folder.path
+		return getTestResultForFile(this.cwd, arg)
 			.then(testResults => {
 				if (testResults) {
 					const timestampComment = testResults.comments[testResults.comments.length - 1];
 					const timestamp = new Date(timestampComment.raw);
-					console.log(timestampComment.raw, timestamp)
 					testResults.asserts.forEach(assert => {
 
 						const testTitle = testResults.tests[assert.test - 1].name
-						const test: AvaTest = this.globalTestIndex[testTitle];
+						const test: AvaTest = folder.testIndex[testTitle];
 						if (test && (!test.timestamp || test.timestamp <= timestamp)) {
 							test.status = assert.ok;
 							test.timestamp = timestamp;
@@ -122,11 +138,8 @@ export class AvaTestState {
 	}
 
 	updateStatus(): Promise<void> {
-		return Promise.all([
-			Bromise.map(this.testFilePaths,
-				(path: string, index: Number) => this.handleTestStatusForFile(path)),
-			this.handleTestStatusGlobal()
-		]).then(() => { this.notifyChange() })
+		return this.handleTestStatusForTree(this.rootFolder, true)
+			.then(() => { this.notifyChange() })
 	}
 
 	watchStatus() {
@@ -138,13 +151,19 @@ export class AvaTestState {
 		const changeCallback = (path: String) => {
 			const match = new RegExp(`/tmp/vscode-ava/tests-${encodeFilePath(this.cwd)}-(.*)-exec.tap`).exec(path)
 			if (match) {
-				console.log(match)
 				if (match[1] === 'ALL') {
-					this.handleTestStatusGlobal()
+					this.handleTestStatusFolder(this.rootFolder, true)
 						.then(() => { this.notifyChange() });
 				} else {
-					this.handleTestStatusForFile(match[1])
-						.then(() => { this.notifyChange() });
+					const file = match[1].replace(/__slash__/g, sep);
+					const folder = this.folderIndex[file];
+					if (folder) {
+						this.handleTestStatusFolder(folder)
+							.then(() => { this.notifyChange() });
+					} else {
+						this.handleTestStatusForFile(match[1])
+							.then(() => { this.notifyChange() });
+					}
 				}
 			}
 		}
