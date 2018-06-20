@@ -3,14 +3,14 @@ mkdir -p /tmp/vscode-ava
 dir="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 cdir="$(pwd)"
 cd $dir
-save_test_path="/tmp/vscode-ava/tests-$1-exec.tap"
-if [ -z "$2" ] ; then
+save_test_path="/tmp/vscode-ava/tests-$1-$2-exec.tap"
+if [ -z "$3" ] ; then
     cat - | tee $save_test_path
     date -R >> $save_test_path
 else
-  cat - | tee "$save_test_path-$2.single.tap" #§todo put in tmp nested dir
+  cat - | tee "$save_test_path.$3.single.tap" #§todo put in tmp nested dir
   # update tap status of specific test
-  test_line="$(cat "$save_test_path-$2.single.tap" | grep -E "^(not )?ok \d+ -" )"
+  test_line="$(cat "$save_test_path.$3.single.tap" | grep -E "^(not )?ok \d+ -" )"
   line_to_update="$(cat "$save_test_path" | grep -E "^(not )?ok \d+ -" | grep "$2" )"
   if [[ "$test_line" =~ ^not* ]] ; then new_status="not ok" ; else new_status="ok" ; fi
   new_line="$(echo "$line_to_update" | sed -E "s:^(not )?ok:$new_status:")"

@@ -75,13 +75,13 @@
           "group": "navigation"
         }
       ],
-			"view/item/context": [
-				{
-					"command": "ava.test-tree.run-tests",
-					"when": "view == ava.test-tree",
-					"group": "inline"
-				}
-			]
+      "view/item/context": [
+        {
+          "command": "ava.test-tree.run-tests",
+          "when": "view == ava.test-tree",
+          "group": "inline"
+        }
+      ]
     },
     "languages": [
       {

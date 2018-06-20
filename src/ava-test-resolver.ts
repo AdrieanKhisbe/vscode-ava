@@ -1,11 +1,11 @@
 import { exec } from 'child_process';
 import * as fs from 'fs';
-import {join, sep} from 'path';
+import { join, sep } from 'path';
 import * as globby from 'globby';
 import * as tapOut from 'tap-out';
 import * as Bromise from 'bluebird';
 import * as AvaFiles from 'ava/lib/ava-files';
-require('ava/lib/chalk').set({enabled: false});
+require('ava/lib/chalk').set({ enabled: false });
 import * as avaPrefixTitle from 'ava/lib/reporters/prefix-title';
 import { Readable } from 'stream';
 import { AvaTest } from './ava-test';
@@ -20,8 +20,8 @@ export const getAllTestFiles = (cwd: string, files?: string[]) => {
 		(candidateFiles: string[]) => {
 			const avafileMatcher = new AvaFiles({ cwd });
 			return candidateFiles
-			.filter(filePath => avafileMatcher.isTest(filePath))
-			.map(path => path.replace(new RegExp(`^${cwd}`, '')));
+				.filter(filePath => avafileMatcher.isTest(filePath))
+				.map(path => path.replace(new RegExp(`^${cwd}`, '')));
 		}
 	).catch(console.log)
 }
@@ -45,12 +45,14 @@ export const getTestFromFile = (cwd: string, file: string, prefix: string): Brom
 	}).then(
 		tests => tests.map(([testLabel, line, type]) => {
 			const avaFullTitle = testLabel && avaPrefixTitle(prefix, file, testLabel);
-			return new AvaTest(testLabel, avaFullTitle, cwd, file, line, type) })
+			return new AvaTest(testLabel, avaFullTitle, cwd, file, line, type)
+		})
 	)
 }
 
-export const getTestResultForFile = (file?: string) => {
-	const resultPath = `/tmp/vscode-ava/tests-${file ? encodeFilePath(file) : 'ALL'}-exec.tap`;
+export const getTestResultForFile = (cwd: string, file?: string) => {
+	const resultPath = `/tmp/vscode-ava/tests-${encodeFilePath(cwd)}-${file ? encodeFilePath(file) : 'ALL'}-exec.tap`;
+	console.log(resultPath)
 	return Bromise.fromCallback(callback => {
 		if (!fs.existsSync(resultPath))
 			return callback(null, null);

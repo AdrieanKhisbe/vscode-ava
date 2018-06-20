@@ -80,7 +80,7 @@ export class AvaTestState {
 	}
 
 	private handleTestStatusForFile(path?: string) {
-		return getTestResultForFile(path)
+		return getTestResultForFile(this.cwd, path)
 			.then(testResults => {
 				if (testResults) {
 					const timestampComment = testResults.comments[testResults.comments.length - 1];
@@ -101,7 +101,7 @@ export class AvaTestState {
 			).catch(console.error)
 	}
 	private handleTestStatusGlobal() {
-		return getTestResultForFile()
+		return getTestResultForFile(this.cwd)
 			.then(testResults => {
 				if (testResults) {
 					const timestampComment = testResults.comments[testResults.comments.length - 1];
@@ -111,7 +111,6 @@ export class AvaTestState {
 
 						const testTitle = testResults.tests[assert.test - 1].name
 						const test: AvaTest = this.globalTestIndex[testTitle];
-						console.log(testTitle, test)
 						if (test && (!test.timestamp || test.timestamp <= timestamp)) {
 							test.status = assert.ok;
 							test.timestamp = timestamp;
@@ -136,9 +135,8 @@ export class AvaTestState {
 			ignoreInitial: true,
 			awaitWriteFinish: true
 		});
-		const changeCallback = path => {
-			console.log(path)
-			const match = /\/tmp\/vscode-ava\/tests-(.*)-exec.tap/.exec(path)
+		const changeCallback = (path: String) => {
+			const match = new RegExp(`/tmp/vscode-ava/tests-${encodeFilePath(this.cwd)}-(.*)-exec.tap`).exec(path)
 			if (match) {
 				console.log(match)
 				if (match[1] === 'ALL') {

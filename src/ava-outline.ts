@@ -31,12 +31,12 @@ export class AvaNodeProvider implements vscode.TreeDataProvider<AvaTestItem> {
 
 	runTests(test: AvaTest | AvaTestFile): void {
 		if (test instanceof AvaTestFile) {
-			runTests({ file: test.path }); // §todo cwd handling (prompting if several)
+			runTests({ cwd: test.cwd, file: test.path }); // §todo cwd handling (prompting if several)
 		} else {
 			if (test.special)
 				vscode.window.showInformationMessage(`${test.getDescription()} is not runnable.`)
 			else
-				runTests({ file: test.path, label: test.label });
+				runTests({ cwd: test.cwd, file: test.path, label: test.label });
 		}
 	}
 
