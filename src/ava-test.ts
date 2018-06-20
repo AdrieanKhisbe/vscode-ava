@@ -1,12 +1,13 @@
 import { basename, join, sep } from 'path';
 import * as _ from 'lodash';
+require('ava/lib/chalk').set({ enabled: false }); // hack because of AVA
 import * as avaPrefixTitle from 'ava/lib/reporters/prefix-title';
 
 export class AvaTest {
 	file: string
 	absolutePath: string
-	constructor(public label: string, public avaFullTitle: string/*TOK*/, public cwd: string,
-		public path: string, public line: number, public type: string,
+	constructor(public label: string, public cwd: string,
+				public path: string, public line: number, public type: string,
 		public status?: boolean, public timestamp?: Date) {
 		this.file = basename(path)
 		this.absolutePath = join(cwd, path)
@@ -69,10 +70,7 @@ export class AvaTestFolder {
 		});
 		const allTestFiles = getAllTestFiles(this.content);
 		return allTestFiles.reduce((acc, tf: AvaTestFile) => {
-			tf.tests.map((test: AvaTest) => {
-				console.log(
-					this.path, test.path, '>>',avaPrefixTitle(this.path, test.path, test.label)
-				)
+			tf.tests.forEach((test: AvaTest) => {
 				acc[avaPrefixTitle(this.path, test.path, test.label)] = test;
 			})
 			return acc;

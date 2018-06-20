@@ -1,7 +1,8 @@
 import * as vscode from 'vscode';
 import { AvaNodeProvider } from './ava-outline';
 import { AvaTestTaskProvider } from './ava-test-provider';
-import {runTests} from './ava-test-runner'
+import {runTests} from './ava-test-runner';
+
 export function activate(context: vscode.ExtensionContext) {
 
     const avaTreeProvider = new AvaNodeProvider();
@@ -14,7 +15,6 @@ export function activate(context: vscode.ExtensionContext) {
 
     return AvaTestTaskProvider().then(
         taskProvider => vscode.workspace.registerTaskProvider('ava', taskProvider)
-    )
-    console.log('registered')
+    );
 }
 export function deactivate() { };

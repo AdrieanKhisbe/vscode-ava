@@ -5,12 +5,10 @@ import * as globby from 'globby';
 import * as tapOut from 'tap-out';
 import * as Bromise from 'bluebird';
 import * as AvaFiles from 'ava/lib/ava-files';
-require('ava/lib/chalk').set({ enabled: false });
-import * as avaPrefixTitle from 'ava/lib/reporters/prefix-title';
 import { Readable } from 'stream';
 import { AvaTest } from './ava-test';
 
-export const encodeFilePath = path => {
+export const encodeFilePath = (path: string) => {
 	const parts = path.split(sep);
 	return parts.join('__slash__')
 }
@@ -21,9 +19,9 @@ export const getAllTestFiles = (cwd: string, files?: string[]) => {
 			const avafileMatcher = new AvaFiles({ cwd });
 			return candidateFiles
 				.filter(filePath => avafileMatcher.isTest(filePath))
-				.map(path => path.replace(new RegExp(`^${cwd}`, '')));
+				.map(path => path.replace(new RegExp(`^${cwd}`), ''));
 		}
-	).catch(console.log)
+	).catch(console.error)
 }
 
 export const getTestFromFile = (cwd: string, file: string, prefix: string): Bromise<AvaTest[]> => {
@@ -31,7 +29,7 @@ export const getTestFromFile = (cwd: string, file: string, prefix: string): Brom
 		const cmd = `${join(__dirname, '..', 'ava-test-resolver')} ${cwd}/${file}`;
 		exec(cmd, (error, stdout, stderr) => {
 			if (error) {
-				console.error(error.message)
+				console.error(error.message);
 				return callback(error);
 			}
 			try {
@@ -39,20 +37,18 @@ export const getTestFromFile = (cwd: string, file: string, prefix: string): Brom
 				callback(null, testData);
 			} catch (err) {
 				console.error(`Problem while parsing json: ${err.message}`);
-				return callback(err)
+				return callback(err);
 			}
 		})
 	}).then(
 		tests => tests.map(([testLabel, line, type]) => {
-			const avaFullTitle = testLabel && avaPrefixTitle(prefix, file, testLabel);
-			return new AvaTest(testLabel, avaFullTitle, cwd, file, line, type)
+			return new AvaTest(testLabel, cwd, file, line, type);
 		})
 	)
 }
 
 export const getTestResultForFile = (cwd: string, file?: string) => {
 	const resultPath = `/tmp/vscode-ava/tests-${encodeFilePath(cwd)}-${file ? encodeFilePath(file) : 'ALL'}-exec.tap`;
-	console.log(resultPath)
 	return Bromise.fromCallback(callback => {
 		if (!fs.existsSync(resultPath))
 			return callback(null, null);
@@ -65,12 +61,12 @@ export const getTestResultForFile = (cwd: string, file?: string) => {
 				const stream = new Readable();
 				stream.pipe(parser);
 				stream.push(fileContent.toString());
-				stream.push(null)
+				stream.push(null);
 			} catch (err) {
-				console.error(err)
-				return callback(err)
+				console.error(err);
+				return callback(err);
 			}
-		}).catch(console.error)
+		}).catch(console.error);
 
 	})
 

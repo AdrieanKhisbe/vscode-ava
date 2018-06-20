@@ -29,7 +29,6 @@ function getTestTasks() {
 
 export const AvaTestTaskProvider = () => getTestTasks().then((testTasks: vscode.Task[]) => ({
 	provideTasks: () => {
-		console.log(testTasks)
 		return testTasks;
 	},
 	resolveTask(_task: vscode.Task): vscode.Task | undefined {

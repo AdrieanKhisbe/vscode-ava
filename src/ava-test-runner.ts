@@ -41,7 +41,6 @@ export function _runTests(args) {
 
 	const cmd = label ? `ava ${file} --match "${label}" --tap | ${__dirname}/../ava-test-runner "${hashedcwd}" "${hashedfile}" "${label}" | ${__dirname}/../ava-test-reporter --no-recap`
 		: `ava --tap ${file || ''} | ${__dirname}/../ava-test-runner "${hashedcwd}" ${hashedfile || 'ALL'} | ${__dirname}/../ava-test-reporter`;
-	console.log(cmd)
 	return Bromise.fromCallback(callback => {
 		const ava = spawn('sh', ['-c', cmd], { cwd })
 		ava.stdout.on('data', data => {

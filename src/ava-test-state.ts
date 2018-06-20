@@ -17,7 +17,7 @@ export class AvaTestState {
 	testFilesIndex: Object;
 	globalTestIndex: Object;
 	rootFolder: AvaTestFolder;
-	public readonly cwd: string
+	public readonly cwd: string;
 	private testWatcher;
 	private readonly notifyChange
 	constructor(public workspace: vscode.WorkspaceFolder, notifyChange?) {
@@ -29,7 +29,7 @@ export class AvaTestState {
 		this.rootFolder = new AvaTestFolder(this.workspace.name, this.cwd, '.', []);
 		this.testFilesIndex = {};
 		this.globalTestIndex = {};
-		this.notifyChange = notifyChange ? notifyChange : () => { }
+		this.notifyChange = notifyChange ? notifyChange : () => { };
 	}
 
 	load(): Promise<void> {
@@ -38,35 +38,32 @@ export class AvaTestState {
 			.catch(console.error);
 	}
 	computeAvailableTests(): Promise<void> {
-		return getAllTestFiles(this.cwd).then(testFiles => {
-			console.log(testFiles)
+		return getAllTestFiles(this.cwd).then((testFiles: string[]) => {
 			this.testFilePaths = testFiles;
-			this.prefix = commonPathPrefix(testFiles)
+			this.prefix = commonPathPrefix(testFiles);
 			const prefixRegex = new RegExp(`^${this.prefix}`);
-			this.testIndex = {}
-			this.globalTestIndex = {}
+			this.testIndex = {};
+			this.globalTestIndex = {};
 			return Bromise.map(testFiles, (path: string, index: Number) => {
 				return getTestFromFile(this.cwd, path, this.prefix)
 					.then(
 						(tests: AvaTest[]) => {
 							const testDict = tests.reduce((acc, val: AvaTest) => {
 								if (val.label) acc[val.label] = val;
-								// §FIXME kill vv
-								if (val.avaFullTitle) this.globalTestIndex[val.avaFullTitle] = val;
 								return acc;
 							}, {})
 							this.testIndex[encodeFilePath(path)] = testDict;
 							const testFile = new AvaTestFile(`test file ${index}`, this.cwd, path, tests);
-							_.set(this.testFilesIndex, path.replace(prefixRegex, '').split(sep), testFile)
-							return testFile
+							_.set(this.testFilesIndex, path.replace(prefixRegex, '').split(sep), testFile);
+							return testFile;
 						}
-					).catch(console.error)
+					).catch(console.error);
 			})
 				.then(testFiles => {
 					this.testFiles = testFiles;
-					this.rootFolder = this.populateFolder(this.testFilesIndex, this.workspace.name, this.prefix)
+					this.rootFolder = this.populateFolder(this.testFilesIndex, this.workspace.name, this.prefix);
 					this.notifyChange();
-				})
+				});
 		})
 	}
 
@@ -82,7 +79,7 @@ export class AvaTestState {
 			})
 		)
 		this.folderIndex[pathTrailingSep] = folder;
-		return folder
+		return folder;
 	}
 
 	private handleTestStatusForTree(tree: AvaTestFolder | AvaTestFile, root = false) {
@@ -167,13 +164,13 @@ export class AvaTestState {
 				}
 			}
 		}
-		this.testWatcher.on('change', changeCallback)
-		this.testWatcher.on('add', changeCallback)
+		this.testWatcher.on('change', changeCallback);
+		this.testWatcher.on('add', changeCallback);
 	}
 
 	stopWatch() {
 		if (this.testWatcher)
-			this.testWatcher.close()
+			this.testWatcher.close();
 	}
 
 }
