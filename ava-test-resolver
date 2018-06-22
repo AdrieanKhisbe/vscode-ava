@@ -4,23 +4,27 @@ const stackTrace = require('stack-trace');
 
 const testList = []
 
-const collectTestMock = type => function (testTitle, implementation) {
+const collectTestMock = function (testTitle, implementation) {
 	const st = stackTrace.get();
-	const title = typeof testTitle === 'string' ? testTitle : ''
-	testList.push([title, st[1].getLineNumber(), type])
+	const title = typeof testTitle === 'string' ? testTitle : '';
+	testList.push([title, st[1].getLineNumber(), this.type]);
+	this.type = 'standard'; // reset type type
 }
-const test = collectTestMock('standard');
-test.cb = collectTestMock('standard');
-test.serial = collectTestMock('standard');
-test.only = collectTestMock('standard');
-test.skip = collectTestMock('skip');
-test.todo = collectTestMock('todo');
-test.failing = collectTestMock('failing');
-test.before = collectTestMock('before');
-test.beforeEach = collectTestMock('beforeEach');
-test.after = collectTestMock('after');
-test.afterEach = collectTestMock('afterEach');
-test.test = test; // testinception
+ const setType = type => function(){ this.type = type; return this; };
+ const noop = function() { return this; };
+
+const test = collectTestMock;
+test.type = 'standard';
+Object.defineProperty(test, 'test', {get: noop});
+Object.defineProperty(test, 'cb', {get: noop});
+Object.defineProperty(test, 'serial', {get: noop});
+Object.defineProperty(test, 'only', {get: noop});
+Object.defineProperty(test, 'skip', {get: setType('skip')});
+Object.defineProperty(test, 'before', {get: setType('before')});
+Object.defineProperty(test, 'beforeEach', {get: setType('beforeEach')});
+Object.defineProperty(test, 'after', {get: setType('after')});
+Object.defineProperty(test, 'afterEach', {get: setType('afterEach')});
+Object.defineProperty(test, 'always', {get: noop});
 
 mock('ava', test);
 
